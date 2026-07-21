@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configurateur d'offres &amp; TCO — TELUS Affaires</title>
+<style>
+/* ===================== BASE / MARQUE TELUS ===================== */
+:root{
+  --violet:#4B286D;
+  --violet-fonce:#3A1F54;
+  --violet-pale:#EFEAF5;
+  --vert:#66CC00;
+  --vert-pale:#EAF7DC;
+  --gris-1:#F6F6F8;
+  --gris-2:#E3E3E8;
+  --gris-3:#8A8D91;
+  --encre:#2A2C2E;
+  --rouge:#C12335;
+  --radius:8px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:14px;
+  color:var(--encre);
+  background:var(--gris-1);
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
+}
+.app{height:100vh;min-height:480px;display:flex;flex-direction:column;overflow:hidden}
+
+/* ===================== EN-TÊTE + ONGLETS ===================== */
+header.appbar{
+  background:var(--violet);color:#fff;padding:10px 16px;
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+}
+header.appbar h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+header.appbar .sous-titre{font-size:12px;opacity:.85}
+nav.tabs{
+  display:flex;gap:2px;background:var(--violet-fonce);padding:0 8px;
+  overflow-x:auto;flex-shrink:0;
+}
+nav.tabs button{
+  appearance:none;border:0;background:transparent;color:#D9CFE6;
+  padding:10px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit;
+}
+nav.tabs button.actif{color:#fff;border-bottom-color:var(--vert)}
+nav.tabs button:hover{color:#fff}
+
+main{flex:1;overflow-y:auto;padding:14px;scroll-behavior:smooth}
+section.onglet{display:none;max-width:1100px;margin:0 auto}
+section.onglet.actif{display:block}
+
+/* ===================== COMPOSANTS ===================== */
+.carte{background:#fff;border:1px solid var(--gris-2);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.carte h2{font-size:15px;margin:0 0 10px;color:var(--violet)}
+.carte h3{font-size:13px;margin:14px 0 8px;color:var(--violet)}
+.ligne-outils{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.btn{
+  appearance:none;border:1px solid var(--violet);background:var(--violet);color:#fff;
+  border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+}
+.btn:hover{background:var(--violet-fonce)}
+.btn.secondaire{background:#fff;color:var(--violet)}
+.btn.secondaire:hover{background:var(--violet-pale)}
+.btn.vert{background:var(--vert);border-color:var(--vert);color:#1d3300}
+.btn.vert:hover{filter:brightness(.95)}
+.btn.danger{background:#fff;border-color:var(--rouge);color:var(--rouge)}
+.btn.danger:hover{background:#FBEBED}
+.btn.mini{padding:4px 9px;font-size:12px}
+
+label.champ{display:inline-flex;flex-direction:column;gap:3px;font-size:12px;color:var(--gris-3);font-weight:600}
+label.case{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--encre);font-weight:500;cursor:pointer}
+input[type=text],input[type=number],input[type=date],select,textarea{
+  border:1px solid var(--gris-2);border-radius:6px;padding:6px 8px;font-size:13px;
+  font-family:inherit;color:var(--encre);background:#fff;min-width:0;
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--violet);outline-offset:-1px}
+input[type=checkbox]{accent-color:var(--violet);width:15px;height:15px}
+textarea{width:100%;resize:vertical}
+
+.grille{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+
+/* Tableaux */
+.defile-x{overflow-x:auto;border:1px solid var(--gris-2);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
+th{background:var(--violet);color:#fff;text-align:left;padding:7px 9px;font-size:12px;white-space:nowrap;font-weight:600}
+td{padding:6px 9px;border-top:1px solid var(--gris-2);vertical-align:middle}
+td.num,th.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.totaux td{background:var(--vert-pale);font-weight:700;border-top:2px solid var(--vert)}
+table.saisie input[type=text],table.saisie input[type=number],table.saisie select{width:100%}
+table.saisie input.etroit{width:80px}
+table.saisie td{padding:4px 6px}
+
+/* Cartes d'items du devis */
+.item-devis{
+  border:1px solid var(--gris-2);border-left:4px solid var(--violet);
+  border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;background:#fff;
+}
+.item-devis .entete-item{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.item-devis .entete-item strong{color:var(--violet)}
+.pastille{display:inline-block;background:var(--violet-pale);color:var(--violet);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700}
+.pastille.verte{background:var(--vert-pale);color:#2c5c00}
+.pastille.rouge{background:#FBEBED;color:var(--rouge)}
+
+.verdict{border-radius:var(--radius);padding:14px;text-align:center;font-size:15px;font-weight:700}
+.verdict.avantage{background:var(--vert-pale);color:#2c5c00;border:1px solid var(--vert)}
+.verdict.desavantage{background:#FBEBED;color:var(--rouge);border:1px solid var(--rouge)}
+.verdict.neutre{background:var(--gris-1);color:var(--gris-3);border:1px solid var(--gris-2)}
+
+.note-info{background:var(--violet-pale);border-radius:6px;padding:8px 10px;font-size:12px;margin:8px 0;color:var(--violet-fonce)}
+.avertissement{background:#FFF6E5;border:1px solid #E8C36A;border-radius:6px;padding:8px 10px;font-size:12px;margin:8px 0;color:#7a5a00}
+ul.notes-auto{margin:6px 0;padding-left:20px;font-size:12.5px}
+ul.notes-auto li{margin:2px 0}
+
+/* Chaîne commission (vue vendeur) */
+.chaine{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.maillon{
+  flex:1;min-width:130px;border:2px solid var(--gris-2);border-radius:var(--radius);
+  padding:10px;text-align:center;background:var(--gris-1);
+}
+.maillon .taux{font-size:20px;font-weight:800;color:var(--gris-3)}
+.maillon .nom-maillon{font-size:12px;font-weight:600;margin-top:2px}
+.maillon.atteint{border-color:var(--vert);background:var(--vert-pale)}
+.maillon.atteint .taux{color:#2c5c00}
+.maillon.suivant{border-color:var(--violet);background:var(--violet-pale)}
+.maillon.suivant .taux{color:var(--violet)}
+
+.toast{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  background:var(--encre);color:#fff;padding:9px 18px;border-radius:999px;
+  font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:99;
+}
+.toast.visible{opacity:.95}
+
+.txt-mini{font-size:11.5px;color:var(--gris-3)}
+.total-vedette{font-size:18px;font-weight:800;color:var(--violet)}
+.total-vedette.vert{color:#3f8500}
+hr.sep{border:0;border-top:1px solid var(--gris-2);margin:12px 0}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width:480px){
+  main{padding:8px}
+  .carte{padding:10px}
+  header.appbar h1{font-size:14px}
+  nav.tabs button{padding:9px 10px;font-size:12px}
+}
+
+/* ===================== IMPRESSION ===================== */
+@media print{
+  .app{height:auto;overflow:visible}
+  main{overflow:visible;padding:0}
+  header.appbar,nav.tabs,.no-print,.ligne-outils{display:none !important}
+  section.onglet{display:none !important}
+  section#zone-impression{display:block !important;max-width:none}
+  .carte{border:0;padding:0;margin-bottom:10px;break-inside:avoid}
+  body{background:#fff;font-size:12px}
+  th{background:var(--violet) !important;color:#fff !important}
+  tr.totaux td{background:var(--vert-pale) !important}
+}
+section#zone-impression{display:none}
+@media print{ .entete-impression{display:block;margin-bottom:12px} }
+.entete-impression{border-bottom:3px solid var(--violet);padding-bottom:8px}
+.entete-impression h1{font-size:18px;color:var(--violet);margin:0}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="appbar">
+    <h1>TELUS Affaires — Configurateur d'offres &amp; TCO</h1>
+    <span class="sous-titre">WLS · HSIA · BCon · TSB — PME Québec</span>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button type="button" class="actif" data-onglet="offres">📥 Offres du jour</button>
+    <button type="button" data-onglet="devis">🧮 Devis + TCO</button>
+    <button type="button" data-onglet="comparateur">⚖️ Comparateur</button>
+    <button type="button" data-onglet="vendeur">👔 Vue vendeur</button>
+  </nav>
+
+  <main>
+
+    <!-- ============================================================ -->
+    <!-- ONGLET 1 : OFFRES DU JOUR                                    -->
+    <!-- ============================================================ -->
+    <section class="onglet actif" id="onglet-offres">
+      <div class="carte">
+        <div class="ligne-outils">
+          <label class="champ">Date de mise à jour
+            <input type="date" id="in-date-maj">
+          </label>
+          <button type="button" class="btn vert" data-action="enregistrer">Enregistrer</button>
+          <button type="button" class="btn secondaire" data-action="exporter-json">Exporter JSON</button>
+          <button type="button" class="btn secondaire" data-action="importer-json">Importer JSON</button>
+          <input type="file" id="in-fichier-json" accept=".json,application/json" style="display:none">
+          <button type="button" class="btn danger" data-action="reinitialiser">Réinitialiser</button>
+        </div>
+        <div class="note-info">Les offres sont sauvegardées automatiquement dans ce navigateur (localStorage).
+        Le stockage d'un iframe Google Sites peut être purgé : <strong>exportez le JSON régulièrement</strong> comme filet de sécurité.</div>
+        <div id="alerte-stockage"></div>
+      </div>
+
+      <div class="carte">
+        <h2>Paramètres globaux</h2>
+        <div class="grille">
+          <label class="case"><input type="checkbox" id="p-taxes-actives"> Taxes QC actives</label>
+          <label class="champ">Taux de taxe (%)
+            <input type="number" id="p-taux-taxe" step="0.001" min="0" style="width:90px">
+          </label>
+          <label class="champ">Rabais PPA par défaut ($/mois)
+            <input type="number" id="p-rabais-ppa" step="0.01" min="0" style="width:90px">
+          </label>
+        </div>
+        <h3>Rabais de volume mobile (−$/ligne admissible)</h3>
+        <div class="grille">
+          <label class="champ">2 lignes<input type="number" id="p-vol-2" step="0.01" style="width:80px"></label>
+          <label class="champ">3 lignes<input type="number" id="p-vol-3" step="0.01" style="width:80px"></label>
+          <label class="champ">4 lignes et +<input type="number" id="p-vol-4" step="0.01" style="width:80px"></label>
+        </div>
+        <h3>Rabais de volume licences BCon (−$/licence)</h3>
+        <div class="grille">
+          <label class="champ">15 et +<input type="number" id="p-lic-15" step="0.01" style="width:75px"></label>
+          <label class="champ">25 et +<input type="number" id="p-lic-25" step="0.01" style="width:75px"></label>
+          <label class="champ">50 et +<input type="number" id="p-lic-50" step="0.01" style="width:75px"></label>
+          <label class="champ">100 et +<input type="number" id="p-lic-100" step="0.01" style="width:75px"></label>
+          <label class="champ">200 et +<input type="number" id="p-lic-200" step="0.01" style="width:75px"></label>
+        </div>
+        <h3>Catégories d'appareil — financement 24 mois ($/mois/appareil)</h3>
+        <div class="grille" id="grille-categories"></div>
+      </div>
+
+      <div class="carte">
+        <h2>WLS — Mobilité (forfaits 5G Affaires)</h2>
+        <div class="defile-x"><table class="saisie" id="table-WLS"></table></div>
+        <p><button type="button" class="btn secondaire mini" data-action="ajouter-offre" data-fam="WLS">+ Ajouter une offre WLS</button></p>
+      </div>
+
+      <div class="carte">
+        <h2>HSIA / WLN — Internet fibre Affaires</h2>
+        <div class="defile-x"><table class="saisie" id="table-HSIA"></table></div>
+        <p><button type="button" class="btn secondaire mini" data-action="ajouter-offre" data-fam="HSIA">+ Ajouter une offre HSIA</button></p>
+      </div>
+
+      <div class="carte">
+        <h2>BCon — Connexion Affaires (voix IP)</h2>
+        <div class="defile-x"><table class="saisie" id="table-BCon"></table></div>
+        <p><button type="button" class="btn secondaire mini" data-action="ajouter-offre" data-fam="BCon">+ Ajouter une offre BCon</button></p>
+      </div>
+
+      <div class="carte">
+        <h2>TSB — TELUS Sécurité d'entreprise</h2>
+        <div class="defile-x"><table class="saisie" id="table-TSB"></table></div>
+        <p><button type="button" class="btn secondaire mini" data-action="ajouter-offre" data-fam="TSB">+ Ajouter une offre TSB</button></p>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ONGLET 2 : DEVIS + TCO                                       -->
+    <!-- ============================================================ -->
+    <section class="onglet" id="onglet-devis">
+      <div class="carte no-print">
+        <h2>Ajouter un produit au devis</h2>
+        <div class="grille">
+          <label class="champ">Famille
+            <select id="sel-famille">
+              <option value="WLS">WLS — Mobilité</option>
+              <option value="HSIA">HSIA — Internet fibre</option>
+              <option value="BCon">BCon — Voix IP</option>
+              <option value="TSB">TSB — Sécurité</option>
+            </select>
+          </label>
+          <label class="champ">Offre du jour
+            <select id="sel-offre" style="min-width:220px"></select>
+          </label>
+          <button type="button" class="btn" data-action="ajouter-item">Ajouter au devis</button>
+          <label class="case"><input type="checkbox" id="d-taxes"> Taxes QC</label>
+          <button type="button" class="btn danger mini" data-action="vider-devis">Vider le devis</button>
+        </div>
+      </div>
+
+      <div id="liste-items" class="no-print"></div>
+
+      <div class="carte">
+        <h2>Récapitulatif du devis</h2>
+        <div class="defile-x"><table id="table-recap"></table></div>
+        <div id="bloc-taxes" style="margin-top:10px"></div>
+        <div id="bloc-notes"></div>
+        <div class="ligne-outils no-print" style="margin-top:10px">
+          <button type="button" class="btn secondaire" data-action="imprimer">Imprimer / PDF</button>
+          <button type="button" class="btn secondaire" data-action="export-csv">Exporter CSV</button>
+        </div>
+      </div>
+
+      <div class="carte no-print">
+        <h2>Résumé copier-coller</h2>
+        <div class="grille" style="margin-bottom:8px">
+          <label class="champ">Utilisation données estimée du client (Go/mois, optionnel)
+            <input type="number" id="d-usage-go" min="0" step="1" style="width:110px">
+          </label>
+          <button type="button" class="btn vert mini" data-action="copier-resume">Copier le résumé</button>
+        </div>
+        <textarea id="txt-resume" rows="14" readonly spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ONGLET 3 : COMPARATEUR                                       -->
+    <!-- ============================================================ -->
+    <section class="onglet" id="onglet-comparateur">
+      <div class="carte">
+        <h2>Offre du concurrent (saisie manuelle)</h2>
+        <div class="grille">
+          <label class="champ">Concurrent
+            <select id="c-nom">
+              <option>Bell</option><option>Rogers</option><option>Vidéotron</option><option>Autre</option>
+            </select>
+          </label>
+          <label class="champ">Prix mensuel total avant taxes ($)
+            <input type="number" id="c-prix" step="0.01" min="0" style="width:110px">
+          </label>
+          <label class="champ">Financement appareils ($/mois)
+            <input type="number" id="c-financement" step="0.01" min="0" style="width:110px">
+          </label>
+          <label class="champ">Durée (mois)
+            <input type="number" id="c-duree" step="1" min="1" style="width:80px">
+          </label>
+          <label class="champ">Frais uniques ($)
+            <input type="number" id="c-frais" step="0.01" min="0" style="width:100px">
+          </label>
+        </div>
+        <p class="txt-mini">Le TCO concurrent = (prix mensuel + financement) × durée + frais uniques, taxes selon le réglage global.</p>
+      </div>
+      <div class="carte" id="carte-verdict"></div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ONGLET 4 : VUE VENDEUR (INTERNE)                             -->
+    <!-- ============================================================ -->
+    <section class="onglet" id="onglet-vendeur">
+      <div class="carte no-print">
+        <label class="case"><input type="checkbox" id="v-mode-interne"> <strong>Mode interne</strong> — afficher les données de commission (ne jamais montrer au client)</label>
+        <div id="contenu-vendeur"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- ZONE D'IMPRESSION (devis + comparateur, jamais la commission) -->
+    <!-- ============================================================ -->
+    <section id="zone-impression"></section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ================================================================
+   TELUS Affaires — Configurateur d'offres + TCO
+   Fichier unique autoportant. Aucun appel réseau. Vanilla JS.
+   Persistance : localStorage ("telus_offres_v1" / "telus_devis_v1")
+   ================================================================ */
+
+var CLE_OFFRES = "telus_offres_v1";
+var CLE_DEVIS  = "telus_devis_v1";
+var stockageOK = true;
+
+/* ---------------- Utilitaires ---------------- */
+function $(s){ return document.querySelector(s); }
+function num(v){
+  if (typeof v === "number") return isFinite(v) ? v : 0;
+  if (v === null || v === undefined) return 0;
+  var n = parseFloat(String(v).replace(/\s/g,"").replace(",","."));
+  return isFinite(n) ? n : 0;
+}
+var _fmtM = new Intl.NumberFormat("fr-CA",{style:"currency",currency:"CAD"});
+var _fmtN = new Intl.NumberFormat("fr-CA",{minimumFractionDigits:2,maximumFractionDigits:2});
+function fmtM(n){ return _fmtM.format(n||0); }
+function fmtN(n){ return _fmtN.format(n||0); }
+function fmtPct(n){ return _fmtN.format(n||0) + " %"; }
+var _fmtT = new Intl.NumberFormat("fr-CA",{minimumFractionDigits:0,maximumFractionDigits:3});
+function fmtTaux(n){ return _fmtT.format(n||0); }
+function libelleTerme(t){ return t==="AVPA" ? "AVPA/BYOD" : String(t||"").replace(/^(\d+)(an)/, "$1 $2"); }
+function esc(s){
+  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+  });
+}
+function uid(){ return "x" + Math.random().toString(36).slice(2,10); }
+function aujourdhui(){
+  var d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function dateFin(mois){
+  var d = new Date(); d.setMonth(d.getMonth() + (num(mois)||0));
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+}
+var toastTimer = null;
+function toast(msg){
+  var t = $("#toast"); t.textContent = msg; t.classList.add("visible");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("visible"); }, 2200);
+}
+
+/* ---------------- État par défaut ---------------- */
+function etatDefaut(){
+  return {
+    meta: { dateMaj: aujourdhui() },
+    parametres: {
+      taxesActives: true, tauxTaxe: 0.14975,
+      rabaisPPA: 10,
+      volumeMobile: { "2": 10, "3": 15, "4": 20 },
+      volumeLicences: { "15": 2, "25": 4, "50": 6, "100": 7, "200": 8 }
+    },
+    categoriesAppareil: [
+      { id:"byod",   nom:"BYOD/AVPA",       financement24: 0 },
+      { id:"entree", nom:"Entrée de gamme", financement24: 12.50 },
+      { id:"milieu", nom:"Milieu de gamme", financement24: 30.29 },
+      { id:"haut",   nom:"Haut de gamme",   financement24: 42.46 }
+    ],
+    offres: {
+      WLS: [
+        { id:uid(), nom:"Affaires 5G+ Illimité CAN-ÉU 100 Go", prixMois:95, prixMoisPPA:85, donneesGo:100,
+          terme:"2ans", creditConnexion:80, promo3moisA0:false,
+          caracteristiques:["Inclut É.-U.","Données ill. (100 Go pleine vitesse)"], eligibleVolume:true,
+          notes:"Exemple — à remplacer par l'offre du jour" },
+        { id:uid(), nom:"Affaires 5G 50 Go", prixMois:75, prixMoisPPA:65, donneesGo:50,
+          terme:"2ans", creditConnexion:80, promo3moisA0:false,
+          caracteristiques:["Canada"], eligibleVolume:true, notes:"Exemple — à remplacer" },
+        { id:uid(), nom:"Affaires BYOD 30 Go (AVPA)", prixMois:55, prixMoisPPA:45, donneesGo:30,
+          terme:"AVPA", creditConnexion:80, promo3moisA0:false,
+          caracteristiques:["Canada"], eligibleVolume:true, notes:"Exemple — à remplacer" }
+      ],
+      HSIA: [
+        { id:uid(), nom:"Internet fibre Affaires 500", vitesse:"500/500 Mbps", prixMois:85, terme:"3ans", wifi:true,
+          notes:"Exemple — à remplacer" },
+        { id:uid(), nom:"Internet fibre Affaires 1 Gig", vitesse:"1 Gbps sym.", prixMois:105, terme:"3ans", wifi:true,
+          notes:"Exemple — à remplacer" }
+      ],
+      BCon: [
+        { id:uid(), nom:"Connexion Affaires — Standard", prixMois:30, terme:"3ans", licences:1,
+          appareilBureau:"Poly VVX 350", notes:"Exemple — à remplacer" },
+        { id:uid(), nom:"Connexion Affaires — Complet", prixMois:40, terme:"3ans", licences:1,
+          appareilBureau:"Poly VVX 450", notes:"Exemple — à remplacer" }
+      ],
+      TSB: [
+        { id:uid(), nom:"Surveillance", prixMois:55, financementEquip:"60", notes:"Exemple — à remplacer" },
+        { id:uid(), nom:"Protection",   prixMois:70, financementEquip:"60", notes:"Exemple — à remplacer" },
+        { id:uid(), nom:"Caméra",       prixMois:45, financementEquip:"36", notes:"Exemple — à remplacer" }
+      ]
+    }
+  };
+}
+function devisDefaut(){
+  return {
+    items: [],
+    usageGo: "",
+    concurrent: { nom:"Bell", prixMois:0, financementMois:0, duree:24, fraisUnique:0 },
+    modeInterne: false,
+    appareilConnecte: false,
+    commissionBase: 100,
+    spiff: 0
+  };
+}
+
+var S = etatDefaut();   // offres + paramètres
+var D = devisDefaut();  // devis en cours
+
+/* ---------------- Persistance ---------------- */
+function charger(){
+  try{
+    var o = localStorage.getItem(CLE_OFFRES);
+    if (o){ var po = JSON.parse(o); if (po && po.offres) S = fusionEtat(etatDefaut(), po); }
+    var d = localStorage.getItem(CLE_DEVIS);
+    if (d){ var pd = JSON.parse(d); if (pd && pd.items) D = Object.assign(devisDefaut(), pd); }
+  }catch(e){ stockageOK = false; }
+}
+function sauver(silencieux){
+  try{
+    localStorage.setItem(CLE_OFFRES, JSON.stringify(S));
+    localStorage.setItem(CLE_DEVIS, JSON.stringify(D));
+    if (!silencieux) toast("Enregistré dans ce navigateur");
+  }catch(e){
+    stockageOK = false;
+    if (!silencieux) toast("Stockage indisponible — utilisez Exporter JSON");
+    majAlerteStockage();
+  }
+}
+function fusionEtat(defaut, charge){
+  var r = defaut;
+  if (charge.meta) r.meta = Object.assign(r.meta, charge.meta);
+  if (charge.parametres) r.parametres = Object.assign(r.parametres, charge.parametres);
+  if (Array.isArray(charge.categoriesAppareil) && charge.categoriesAppareil.length) r.categoriesAppareil = charge.categoriesAppareil;
+  if (charge.offres){
+    ["WLS","HSIA","BCon","TSB"].forEach(function(f){
+      if (Array.isArray(charge.offres[f])) r.offres[f] = charge.offres[f];
+    });
+  }
+  return r;
+}
+function majAlerteStockage(){
+  $("#alerte-stockage").innerHTML = stockageOK ? "" :
+    '<div class="avertissement"><strong>localStorage indisponible dans cet iframe.</strong> Les données ne survivront pas au rechargement : exportez le JSON avant de quitter, puis réimportez-le.</div>';
+}
+
+/* ================================================================
+   MOTEUR DE CALCUL (§5)
+   ================================================================ */
+function offreDe(fam, id){
+  return (S.offres[fam]||[]).find(function(o){ return o.id === id; }) || null;
+}
+function rabaisVolumeMobile(nbLignes){
+  var v = S.parametres.volumeMobile;
+  if (nbLignes >= 4) return num(v["4"]);
+  if (nbLignes >= 3) return num(v["3"]);
+  if (nbLignes >= 2) return num(v["2"]);
+  return 0;
+}
+function rabaisVolumeLicences(nbLic){
+  var v = S.parametres.volumeLicences, r = 0;
+  Object.keys(v).map(Number).sort(function(a,b){return a-b;}).forEach(function(seuil){
+    if (nbLic >= seuil) r = num(v[String(seuil)]);
+  });
+  return r;
+}
+function categorieDe(id){
+  return S.categoriesAppareil.find(function(c){ return c.id === id; }) || null;
+}
+
+/* Contexte global du devis : lignes admissibles au volume, licences BCon totales */
+function contexteDevis(){
+  var lignesVol = 0, licTotal = 0;
+  D.items.forEach(function(it){
+    if (it.famille === "WLS"){
+      var o = offreDe("WLS", it.offreId);
+      if (o && o.eligibleVolume !== false) lignesVol += Math.max(0, Math.round(num(it.lignes)));
+    }
+    if (it.famille === "BCon") licTotal += Math.max(0, Math.round(num(it.licences)));
+  });
+  return { lignesVol: lignesVol, licTotal: licTotal };
+}
+
+/* Calcule un item du devis. Tous les montants sont AVANT taxes. */
+function calculerItem(it, ctx){
+  var r = {
+    ok:false, famille:it.famille, nomOffre:"(offre supprimée)", detail:"", qte:1, duree:num(it.duree)||24,
+    mensuelForfaits:0, mensuelFinancement:0, mensuelTotal:0,
+    financementTotal:0, fraisUniques:0, credits:0, rabais:0, go:0, tco:0, notes:[]
+  };
+  var o = offreDe(it.famille, it.offreId);
+  if (!o){ r.notes.push("Offre introuvable — retirez cet item ou re-sélectionnez une offre."); return r; }
+  r.ok = true; r.nomOffre = o.nom || "";
+
+  if (it.famille === "WLS"){
+    var lignes = Math.max(1, Math.round(num(it.lignes)));
+    r.qte = lignes;
+    var prixBase = num(o.prixMois);
+    var prixPPA  = (o.prixMoisPPA === "" || o.prixMoisPPA === null || o.prixMoisPPA === undefined)
+                   ? prixBase - num(S.parametres.rabaisPPA) : num(o.prixMoisPPA);
+    var base = it.ppa ? prixPPA : prixBase;
+    var rabaisPPAeff = it.ppa ? Math.max(0, prixBase - prixPPA) : 0;
+    var rVol = (o.eligibleVolume !== false) ? rabaisVolumeMobile(ctx.lignesVol) : 0;
+    var rMan = num(it.rabaisManuel);
+    var mensLigne = Math.max(0, base - rVol - rMan);
+    r.mensuelForfaits = mensLigne * lignes;
+
+    var cat = categorieDe(it.catId);
+    var finApp = cat ? num(cat.financement24) : 0;
+    var nbApp = (cat && cat.id !== "byod") ? Math.max(0, Math.round(num(it.nbAppareils))) : 0;
+    r.mensuelFinancement = finApp * nbApp;
+    r.financementTotal = finApp * 24 * nbApp;
+
+    var fraisConn = num(o.creditConnexion) || 0;
+    r.fraisUniques = fraisConn * lignes;
+
+    var promo3 = !!it.promo3 && !!o.promo3moisA0;
+    var modeCredit = promo3 ? "aucun" : (it.credit || "aucun");
+    if (promo3){
+      var cPromo = mensLigne * Math.min(3, r.duree) * lignes;
+      r.credits += cPromo;
+      r.notes.push("Promo « 3 mois à 0 $ » appliquée (crédit " + fmtM(cPromo) + ") — non cumulable avec le crédit de connexion.");
+    }
+    if (modeCredit === "exo"){
+      r.credits += r.fraisUniques;
+      r.notes.push("Frais de connexion exonérés (" + fmtM(r.fraisUniques) + ") — entente 2 ans.");
+    } else if (modeCredit === "16x5"){
+      var c16 = 5 * Math.min(16, r.duree) * lignes;
+      r.credits += c16;
+      r.notes.push("Crédit connexion 5 $/mois × 16 mois (" + fmtM(c16) + ") — AVPA/BYOD.");
+    } else if (!promo3){
+      r.notes.push("Frais de connexion facturés (" + fmtM(r.fraisUniques) + ").");
+    }
+
+    r.rabais = (rVol + rMan + rabaisPPAeff) * lignes * r.duree;
+    r.go = num(o.donneesGo) * lignes;
+    r.tco = r.mensuelForfaits * r.duree + r.financementTotal + r.fraisUniques - r.credits;
+
+    r.detail = lignes + " ligne" + (lignes>1?"s":"") + " · " + (cat ? cat.nom : "—")
+             + (nbApp ? " · " + nbApp + " appareil" + (nbApp>1?"s":"") + " financé" + (nbApp>1?"s":"") : "")
+             + " · " + (it.ppa ? "PPA" : "sans PPA");
+
+    if (it.ppa) r.notes.push("Rabais PPA (paiement préautorisé) : −" + fmtN(rabaisPPAeff) + " $/ligne/mois.");
+    if (rVol > 0) r.notes.push("Rabais de volume mobile (" + ctx.lignesVol + " lignes admissibles) : −" + fmtN(rVol) + " $/ligne/mois.");
+    if (rMan > 0) r.notes.push("Rabais manuel : −" + fmtN(rMan) + " $/ligne/mois.");
+    if (nbApp > 0){
+      r.notes.push(nbApp + " appareil(s) en financement 24 mois à " + fmtN(finApp) + " $/mois (Option retour).");
+      if (r.duree < 24){
+        r.notes.push("Solde restant par appareil après " + r.duree + " mois : " + fmtM(finApp * (24 - r.duree)) + ".");
+      }
+    }
+    (o.caracteristiques||[]).forEach(function(c){ if (String(c).trim()) r.notes.push(String(c).trim() + "."); });
+    r.notes.push("Terme " + libelleTerme(o.terme) + " — fin d'entente estimée : " + dateFin(r.duree) + ".");
+  }
+
+  if (it.famille === "HSIA"){
+    var rManH = num(it.rabaisManuel);
+    r.mensuelForfaits = Math.max(0, num(o.prixMois) - rManH);
+    r.fraisUniques = num(it.fraisUnique);
+    r.rabais = rManH * r.duree;
+    r.tco = r.mensuelForfaits * r.duree + r.fraisUniques;
+    r.detail = (o.vitesse || "") + (o.wifi ? " · Wi-Fi affaires inclus" : "");
+    if (rManH > 0) r.notes.push("Rabais manuel HSIA : −" + fmtN(rManH) + " $/mois.");
+    r.notes.push("Terme " + libelleTerme(o.terme || "3ans") + " — fin d'entente estimée : " + dateFin(r.duree) + ".");
+  }
+
+  if (it.famille === "BCon"){
+    var lic = Math.max(1, Math.round(num(it.licences)));
+    r.qte = lic;
+    var rLic = rabaisVolumeLicences(ctx.licTotal);
+    var rManB = num(it.rabaisManuel);
+    var mensLic = Math.max(0, num(o.prixMois) - rLic - rManB);
+    r.mensuelForfaits = mensLic * lic;
+    var eqMois = num(it.equipMois);
+    var eqDuree = num(it.equipDuree) || 36;
+    r.mensuelFinancement = eqMois;
+    r.financementTotal = eqMois * eqDuree;
+    r.rabais = (rLic + rManB) * lic * r.duree;
+    r.tco = r.mensuelForfaits * r.duree + r.financementTotal;
+    r.detail = lic + " licence" + (lic>1?"s":"") + (o.appareilBureau ? " · " + o.appareilBureau : "");
+    if (rLic > 0) r.notes.push("Rabais de volume licences (" + ctx.licTotal + " licences au devis) : −" + fmtN(rLic) + " $/licence/mois.");
+    if (rManB > 0) r.notes.push("Rabais manuel : −" + fmtN(rManB) + " $/licence/mois.");
+    if (eqMois > 0) r.notes.push("Équipement (téléphones de bureau) en Paiements faciles " + eqDuree + " mois : " + fmtN(eqMois) + " $/mois.");
+    r.notes.push("Terme " + libelleTerme(o.terme || "3ans") + " — fin d'entente estimée : " + dateFin(r.duree) + ".");
+  }
+
+  if (it.famille === "TSB"){
+    var q = Math.max(1, Math.round(num(it.qte)));
+    r.qte = q;
+    var rManT = num(it.rabaisManuel);
+    r.mensuelForfaits = Math.max(0, num(o.prixMois) - rManT) * q;
+    var eqM = num(it.equipMois);
+    var eqD = num(it.equipDuree) || num(o.financementEquip) || 36;
+    r.mensuelFinancement = eqM;
+    r.financementTotal = eqM * eqD;
+    r.rabais = rManT * q * r.duree;
+    r.tco = r.mensuelForfaits * r.duree + r.financementTotal;
+    r.detail = q + " site(s)/service(s)";
+    if (rManT > 0) r.notes.push("Rabais manuel : −" + fmtN(rManT) + " $/mois.");
+    if (eqM > 0) r.notes.push("Équipement sécurité en Paiements faciles " + eqD + " mois : " + fmtN(eqM) + " $/mois.");
+    r.notes.push("Fin d'entente estimée : " + dateFin(r.duree) + ".");
+  }
+
+  r.mensuelTotal = r.mensuelForfaits + r.mensuelFinancement;
+  return r;
+}
+
+/* Totaux du devis (avant + après taxes) */
+function calculerDevis(){
+  var ctx = contexteDevis();
+  var lignes = D.items.map(function(it){ return calculerItem(it, ctx); });
+  var t = {
+    lignes: lignes, ctx: ctx,
+    mensuelForfaits:0, mensuelFinancement:0, mensuelTotal:0,
+    financementTotal:0, fraisUniques:0, credits:0, rabais:0, go:0, tcoAvant:0
+  };
+  lignes.forEach(function(l){
+    t.mensuelForfaits += l.mensuelForfaits;
+    t.mensuelFinancement += l.mensuelFinancement;
+    t.mensuelTotal += l.mensuelTotal;
+    t.financementTotal += l.financementTotal;
+    t.fraisUniques += l.fraisUniques;
+    t.credits += l.credits;
+    t.rabais += l.rabais;
+    t.go += l.go;
+    t.tcoAvant += l.tco;
+  });
+  var taux = num(S.parametres.tauxTaxe);
+  t.taxesActives = !!S.parametres.taxesActives;
+  t.taxes = t.taxesActives ? t.tcoAvant * taux : 0;
+  t.tcoTotal = t.tcoAvant + t.taxes;
+  t.mensuelAvecTaxes = t.taxesActives ? t.mensuelTotal * (1 + taux) : t.mensuelTotal;
+  t.taxesFinancementAvance = t.taxesActives ? t.financementTotal * taux : 0;
+  return t;
+}
+
+/* Comparateur */
+function calculerConcurrent(){
+  var c = D.concurrent;
+  var avant = (num(c.prixMois) + num(c.financementMois)) * (num(c.duree)||0) + num(c.fraisUnique);
+  var taux = num(S.parametres.tauxTaxe);
+  var taxes = S.parametres.taxesActives ? avant * taux : 0;
+  return { avant: avant, taxes: taxes, total: avant + taxes };
+}
+
+/* Vue vendeur : chaîne 100 → 125 → 150 → 200 % */
+function calculerCommission(){
+  var aWLS = D.items.some(function(i){ return i.famille==="WLS"; });
+  var aHSIA = D.items.some(function(i){ return i.famille==="HSIA"; });
+  var aBCon = D.items.some(function(i){ return i.famille==="BCon"; });
+  var aCD = !!D.appareilConnecte;
+  var mult = 0, etape = 0;
+  if (aWLS){ mult = 100; etape = 1;
+    if (aHSIA){ mult = 125; etape = 2;
+      if (aBCon){ mult = 150; etape = 3;
+        if (aCD){ mult = 200; etape = 4; }
+      }
+    }
+  }
+  return { aWLS:aWLS, aHSIA:aHSIA, aBCon:aBCon, aCD:aCD, mult:mult, etape:etape };
+}
+
+/* ================================================================
+   RENDU — ONGLET OFFRES
+   ================================================================ */
+var COLONNES = {
+  WLS: [
+    { cle:"nom", label:"Nom du forfait", type:"text" },
+    { cle:"prixMois", label:"Prix $/mois", type:"number" },
+    { cle:"prixMoisPPA", label:"Prix PPA $/mois", type:"number" },
+    { cle:"donneesGo", label:"Données (Go)", type:"number" },
+    { cle:"terme", label:"Terme", type:"select", options:[["2ans","2 ans"],["AVPA","AVPA/BYOD"]] },
+    { cle:"creditConnexion", label:"Frais conn. $", type:"number" },
+    { cle:"promo3moisA0", label:"3 mois à 0 $", type:"checkbox" },
+    { cle:"eligibleVolume", label:"Élig. volume", type:"checkbox" },
+    { cle:"caracteristiques", label:"Caractéristiques (séparées par ;)", type:"csv" },
+    { cle:"notes", label:"Notes", type:"text" }
+  ],
+  HSIA: [
+    { cle:"nom", label:"Nom", type:"text" },
+    { cle:"vitesse", label:"Vitesse", type:"text" },
+    { cle:"prixMois", label:"Prix $/mois", type:"number" },
+    { cle:"terme", label:"Terme", type:"select", options:[["3ans","3 ans"],["2ans","2 ans"],["1an","1 an"]] },
+    { cle:"wifi", label:"Wi-Fi inclus", type:"checkbox" },
+    { cle:"notes", label:"Notes", type:"text" }
+  ],
+  BCon: [
+    { cle:"nom", label:"Nom", type:"text" },
+    { cle:"prixMois", label:"Prix $/licence/mois", type:"number" },
+    { cle:"terme", label:"Terme", type:"select", options:[["3ans","3 ans"],["2ans","2 ans"],["1an","1 an"]] },
+    { cle:"licences", label:"Licences min.", type:"number" },
+    { cle:"appareilBureau", label:"Appareil de bureau", type:"text" },
+    { cle:"notes", label:"Notes", type:"text" }
+  ],
+  TSB: [
+    { cle:"nom", label:"Nom (Surveillance/Protection/Caméra)", type:"text" },
+    { cle:"prixMois", label:"Prix $/mois", type:"number" },
+    { cle:"financementEquip", label:"Financ. équip.", type:"select", options:[["36","36 mois"],["60","60 mois"]] },
+    { cle:"notes", label:"Notes", type:"text" }
+  ]
+};
+function offreDefaut(fam){
+  var base = { id: uid(), nom:"Nouvelle offre", notes:"" };
+  if (fam==="WLS") return Object.assign(base, { prixMois:0, prixMoisPPA:"", donneesGo:0, terme:"2ans",
+    creditConnexion:80, promo3moisA0:false, eligibleVolume:true, caracteristiques:[] });
+  if (fam==="HSIA") return Object.assign(base, { vitesse:"", prixMois:0, terme:"3ans", wifi:true });
+  if (fam==="BCon") return Object.assign(base, { prixMois:0, terme:"3ans", licences:1, appareilBureau:"" });
+  return Object.assign(base, { prixMois:0, financementEquip:"36" });
+}
+
+function rendreTableOffres(fam){
+  var cols = COLONNES[fam];
+  var html = "<thead><tr>" + cols.map(function(c){ return "<th>"+esc(c.label)+"</th>"; }).join("") + "<th></th></tr></thead><tbody>";
+  (S.offres[fam]||[]).forEach(function(o, i){
+    html += "<tr>";
+    cols.forEach(function(c){
+      var v = o[c.cle];
+      var attrs = ' data-champ-offre data-fam="'+fam+'" data-idx="'+i+'" data-cle="'+c.cle+'" data-type="'+c.type+'"';
+      if (c.type === "checkbox"){
+        html += '<td style="text-align:center"><input type="checkbox"'+attrs+(v?" checked":"")+"></td>";
+      } else if (c.type === "select"){
+        html += "<td><select"+attrs+">" + c.options.map(function(op){
+          return '<option value="'+esc(op[0])+'"'+(String(v)===op[0]?" selected":"")+">"+esc(op[1])+"</option>";
+        }).join("") + "</select></td>";
+      } else if (c.type === "number"){
+        html += '<td><input class="etroit" type="number" step="0.01"'+attrs+' value="'+esc(v===""||v==null?"":v)+'"></td>';
+      } else if (c.type === "csv"){
+        html += '<td><input type="text"'+attrs+' value="'+esc(Array.isArray(v)?v.join("; "):(v||""))+'" style="min-width:180px"></td>';
+      } else {
+        html += '<td><input type="text"'+attrs+' value="'+esc(v==null?"":v)+'" style="min-width:140px"></td>';
+      }
+    });
+    html += '<td><button type="button" class="btn danger mini" data-action="supprimer-offre" data-fam="'+fam+'" data-idx="'+i+'">✕</button></td></tr>';
+  });
+  html += "</tbody>";
+  $("#table-"+fam).innerHTML = html;
+}
+
+function rendreParametres(){
+  var p = S.parametres;
+  $("#in-date-maj").value = S.meta.dateMaj || aujourdhui();
+  $("#p-taxes-actives").checked = !!p.taxesActives;
+  $("#d-taxes").checked = !!p.taxesActives;
+  $("#p-taux-taxe").value = Math.round(num(p.tauxTaxe) * 100000) / 1000;
+  $("#p-rabais-ppa").value = num(p.rabaisPPA);
+  $("#p-vol-2").value = num(p.volumeMobile["2"]);
+  $("#p-vol-3").value = num(p.volumeMobile["3"]);
+  $("#p-vol-4").value = num(p.volumeMobile["4"]);
+  ["15","25","50","100","200"].forEach(function(s){ $("#p-lic-"+s).value = num(p.volumeLicences[s]); });
+  $("#grille-categories").innerHTML = S.categoriesAppareil.map(function(c, i){
+    return '<label class="champ">'+esc(c.nom)+' ($/mois)<input type="number" step="0.01" min="0" style="width:100px" data-cat-fin data-idx="'+i+'" value="'+esc(c.financement24)+'"></label>';
+  }).join("");
+}
+
+function rendreOffres(){
+  rendreParametres();
+  ["WLS","HSIA","BCon","TSB"].forEach(rendreTableOffres);
+  majSelectOffre();
+  majAlerteStockage();
+}
+
+/* ================================================================
+   RENDU — ONGLET DEVIS
+   ================================================================ */
+function majSelectOffre(){
+  var fam = $("#sel-famille").value;
+  $("#sel-offre").innerHTML = (S.offres[fam]||[]).map(function(o){
+    var prix = fmtN(num(o.prixMois)) + " $/mois";
+    return '<option value="'+esc(o.id)+'">'+esc(o.nom)+" — "+prix+"</option>";
+  }).join("") || '<option value="">(aucune offre saisie)</option>';
+}
+
+function itemDefaut(fam, offreId){
+  var o = offreDe(fam, offreId) || {};
+  var base = { uid: uid(), famille: fam, offreId: offreId, rabaisManuel: 0 };
+  if (fam === "WLS") return Object.assign(base, {
+    lignes: 1, catId: "byod", nbAppareils: 1, ppa: true,
+    credit: (o.terme === "AVPA" ? "16x5" : "exo"),
+    promo3: !!o.promo3moisA0,
+    duree: (o.terme === "AVPA" ? 24 : 24)
+  });
+  if (fam === "HSIA") return Object.assign(base, { duree: 36, fraisUnique: 0 });
+  if (fam === "BCon") return Object.assign(base, { licences: Math.max(1, num(o.licences)||1), duree: 36, equipMois: 0, equipDuree: 36 });
+  return Object.assign(base, { qte: 1, duree: 36, equipMois: 0, equipDuree: num(o.financementEquip) || 36 });
+}
+
+function rendreItems(){
+  var conteneur = $("#liste-items");
+  if (!D.items.length){
+    conteneur.innerHTML = '<div class="carte"><em>Aucun produit au devis. Ajoutez une offre ci-dessus.</em></div>';
+    return;
+  }
+  conteneur.innerHTML = D.items.map(function(it, i){
+    var o = offreDe(it.famille, it.offreId);
+    var nom = o ? o.nom : "(offre supprimée)";
+    var champ = function(label, inner){ return '<label class="champ">'+label+inner+"</label>"; };
+    var inNum = function(cle, val, larg, step){
+      return '<input type="number" step="'+(step||"0.01")+'" min="0" style="width:'+(larg||90)+'px" data-champ-item data-uid="'+it.uid+'" data-cle="'+cle+'" value="'+esc(val)+'">';
+    };
+    var ctrls = "";
+    if (it.famille === "WLS"){
+      var opts = S.categoriesAppareil.map(function(c){
+        return '<option value="'+esc(c.id)+'"'+(c.id===it.catId?" selected":"")+">"+esc(c.nom)+" ("+fmtN(num(c.financement24))+" $/mois)</option>";
+      }).join("");
+      ctrls =
+        champ("Nb de lignes", inNum("lignes", it.lignes, 70, "1")) +
+        champ("Catégorie d'appareil", '<select data-champ-item data-uid="'+it.uid+'" data-cle="catId">'+opts+"</select>") +
+        champ("Appareils financés", inNum("nbAppareils", it.nbAppareils, 70, "1")) +
+        champ("Durée TCO (mois)", inNum("duree", it.duree, 70, "1")) +
+        '<label class="case"><input type="checkbox" data-champ-item data-uid="'+it.uid+'" data-cle="ppa"'+(it.ppa?" checked":"")+"> PPA</label>" +
+        champ("Crédit connexion",
+          '<select data-champ-item data-uid="'+it.uid+'" data-cle="credit">' +
+          '<option value="exo"'+(it.credit==="exo"?" selected":"")+'>Exonération 80 $ (2 ans)</option>' +
+          '<option value="16x5"'+(it.credit==="16x5"?" selected":"")+'>5 $/mois × 16 (AVPA/BYOD)</option>' +
+          '<option value="aucun"'+(it.credit==="aucun"?" selected":"")+'>Aucun</option></select>') +
+        (o && o.promo3moisA0 ? '<label class="case"><input type="checkbox" data-champ-item data-uid="'+it.uid+'" data-cle="promo3"'+(it.promo3?" checked":"")+"> Promo 3 mois à 0 $</label>" : "") +
+        champ("Rabais manuel $/ligne/mois", inNum("rabaisManuel", it.rabaisManuel, 80));
+    } else if (it.famille === "HSIA"){
+      ctrls =
+        champ("Durée TCO (mois)", inNum("duree", it.duree, 70, "1")) +
+        champ("Frais uniques $", inNum("fraisUnique", it.fraisUnique, 90)) +
+        champ("Rabais manuel $/mois", inNum("rabaisManuel", it.rabaisManuel, 80));
+    } else if (it.famille === "BCon"){
+      ctrls =
+        champ("Nb de licences", inNum("licences", it.licences, 70, "1")) +
+        champ("Durée TCO (mois)", inNum("duree", it.duree, 70, "1")) +
+        champ("Équipement $/mois", inNum("equipMois", it.equipMois, 90)) +
+        champ("Financ. équip. (mois)",
+          '<select data-champ-item data-uid="'+it.uid+'" data-cle="equipDuree">' +
+          '<option value="36"'+(num(it.equipDuree)===36?" selected":"")+'>36</option>' +
+          '<option value="60"'+(num(it.equipDuree)===60?" selected":"")+'>60</option></select>') +
+        champ("Rabais manuel $/lic./mois", inNum("rabaisManuel", it.rabaisManuel, 80));
+    } else {
+      ctrls =
+        champ("Quantité", inNum("qte", it.qte, 70, "1")) +
+        champ("Durée TCO (mois)", inNum("duree", it.duree, 70, "1")) +
+        champ("Équipement $/mois", inNum("equipMois", it.equipMois, 90)) +
+        champ("Financ. équip. (mois)",
+          '<select data-champ-item data-uid="'+it.uid+'" data-cle="equipDuree">' +
+          '<option value="36"'+(num(it.equipDuree)===36?" selected":"")+'>36</option>' +
+          '<option value="60"'+(num(it.equipDuree)===60?" selected":"")+'>60</option></select>') +
+        champ("Rabais manuel $/mois", inNum("rabaisManuel", it.rabaisManuel, 80));
+    }
+    return '<div class="item-devis"><div class="entete-item">' +
+      '<span><span class="pastille">'+esc(it.famille)+'</span> <strong>'+esc(nom)+"</strong></span>" +
+      '<button type="button" class="btn danger mini" data-action="supprimer-item" data-uid="'+it.uid+'">Retirer</button>' +
+      '</div><div class="grille">'+ctrls+"</div></div>";
+  }).join("");
+}
+
+function rendreRecap(){
+  var t = calculerDevis();
+  var html = "<thead><tr><th>Produit</th><th>Offre</th><th>Détail</th><th class=num>Qté</th>" +
+    "<th class=num>Forfaits $/mois</th><th class=num>Financ. $/mois</th><th class=num>Mensuel $/mois</th>" +
+    "<th class=num>Durée</th><th class=num>Rabais + crédits</th><th class=num>TCO durée</th></tr></thead><tbody>";
+  if (!t.lignes.length){
+    html += '<tr><td colspan="10"><em>Devis vide.</em></td></tr>';
+  }
+  t.lignes.forEach(function(l){
+    html += "<tr><td>"+esc(l.famille)+"</td><td>"+esc(l.nomOffre)+"</td><td>"+esc(l.detail)+"</td>" +
+      '<td class=num>'+l.qte+"</td>" +
+      '<td class=num>'+fmtN(l.mensuelForfaits)+"</td>" +
+      '<td class=num>'+fmtN(l.mensuelFinancement)+"</td>" +
+      '<td class=num>'+fmtN(l.mensuelTotal)+"</td>" +
+      '<td class=num>'+l.duree+" mois</td>" +
+      '<td class=num>'+fmtN(l.rabais + l.credits)+"</td>" +
+      '<td class=num>'+fmtN(l.tco)+"</td></tr>";
+  });
+  if (t.lignes.length){
+    html += '<tr class="totaux"><td colspan="4">TOTAUX' + (t.go ? " — " + fmtN(t.go).replace(",00","") + " Go inclus" : "") + "</td>" +
+      '<td class=num>'+fmtN(t.mensuelForfaits)+"</td>" +
+      '<td class=num>'+fmtN(t.mensuelFinancement)+"</td>" +
+      '<td class=num>'+fmtN(t.mensuelTotal)+"</td>" +
+      "<td></td>" +
+      '<td class=num>'+fmtN(t.rabais + t.credits)+"</td>" +
+      '<td class=num>'+fmtN(t.tcoAvant)+"</td></tr>";
+  }
+  html += "</tbody>";
+  $("#table-recap").innerHTML = html;
+
+  var bt = "";
+  if (t.lignes.length){
+    bt += '<div class="grille" style="justify-content:flex-end;gap:24px">';
+    bt += '<div><div class="txt-mini">Sous-total TCO avant taxes</div><div class="total-vedette">'+fmtM(t.tcoAvant)+"</div></div>";
+    if (t.taxesActives){
+      bt += '<div><div class="txt-mini">Taxes (TPS+TVQ '+fmtTaux(num(S.parametres.tauxTaxe)*100)+' %)</div><div class="total-vedette">'+fmtM(t.taxes)+"</div></div>";
+    }
+    bt += '<div><div class="txt-mini">TCO total sur la durée'+(t.taxesActives?" (taxes incl.)":" (avant taxes)")+'</div><div class="total-vedette vert">'+fmtM(t.tcoTotal)+"</div></div>";
+    bt += '<div><div class="txt-mini">Mensuel'+(t.taxesActives?" avec taxes":" avant taxes")+'</div><div class="total-vedette vert">'+fmtM(t.mensuelAvecTaxes)+"</div></div>";
+    bt += "</div>";
+    if (t.taxesActives && t.financementTotal > 0){
+      bt += '<div class="avertissement">Rappel : les taxes sur le financement d\'appareils/équipement ('+fmtM(t.taxesFinancementAvance)+') sont exigibles d\'avance sur la 1<sup>re</sup> facture.</div>';
+    }
+  }
+  $("#bloc-taxes").innerHTML = bt;
+
+  var notes = [];
+  t.lignes.forEach(function(l){
+    l.notes.forEach(function(n){ notes.push("<strong>" + esc(l.famille) + "</strong> — " + esc(n)); });
+  });
+  $("#bloc-notes").innerHTML = notes.length
+    ? "<h3 style='color:var(--violet);font-size:13px;margin:12px 0 4px'>Notes automatiques</h3><ul class='notes-auto'>" +
+      notes.map(function(n){ return "<li>"+n+"</li>"; }).join("") + "</ul>"
+    : "";
+
+  $("#txt-resume").value = genererResume(t);
+  rendreComparateur(t);
+  rendreVendeur();
+  rendreZoneImpression(t);
+}
+
+/* ---------------- Résumé copier-coller ---------------- */
+function genererResume(t){
+  if (!t.lignes.length) return "Devis vide.";
+  var L = [];
+  L.push("DEVIS TELUS AFFAIRES — " + aujourdhui() + " (offres du " + (S.meta.dateMaj||"?") + ")");
+  L.push("──────────────────────────────────────");
+  t.lignes.forEach(function(l){
+    L.push("• " + l.famille + " — " + l.nomOffre + " : " + l.detail);
+    L.push("   Mensuel " + fmtN(l.mensuelTotal) + " $ (forfaits " + fmtN(l.mensuelForfaits) +
+           " $ + financement " + fmtN(l.mensuelFinancement) + " $) · TCO " + l.duree + " mois : " + fmtN(l.tco) + " $ avant taxes");
+  });
+  L.push("──────────────────────────────────────");
+  L.push("Total mensuel avant taxes : " + fmtN(t.mensuelTotal) + " $  (forfaits " + fmtN(t.mensuelForfaits) + " $ + financement " + fmtN(t.mensuelFinancement) + " $)");
+  L.push("Total rabais et crédits sur la durée : " + fmtN(t.rabais + t.credits) + " $");
+  L.push("TCO avant taxes : " + fmtN(t.tcoAvant) + " $");
+  if (t.taxesActives){
+    L.push("Taxes (14,975 %) : " + fmtN(t.taxes) + " $ — TCO TOTAL : " + fmtN(t.tcoTotal) + " $");
+    if (t.financementTotal > 0) L.push("Taxes du financement dues à la 1re facture : " + fmtN(t.taxesFinancementAvance) + " $");
+  }
+  if (t.go > 0){
+    L.push("Données incluses : " + fmtN(t.go).replace(",00","") + " Go/mois");
+    var usage = num(D.usageGo);
+    if (usage > 0) L.push("Utilisation estimée du client : " + usage + " Go → " + fmtN(usage / t.go * 100) + " % de l'enveloppe");
+  }
+  var fins = {};
+  t.lignes.forEach(function(l){ fins[l.famille + " " + dateFin(l.duree)] = true; });
+  L.push("Fins d'entente estimées : " + Object.keys(fins).join(" · "));
+  var c = D.concurrent;
+  if (num(c.prixMois) > 0){
+    var cc = calculerConcurrent(), ecart = cc.total - t.tcoTotal;
+    L.push("VS " + c.nom + " : TCO " + fmtN(cc.total) + " $ → écart " + fmtN(Math.abs(ecart)) + " $ (" +
+      fmtN(cc.total ? Math.abs(ecart)/cc.total*100 : 0) + " %) " + (ecart >= 0 ? "en faveur de TELUS" : "en faveur du concurrent"));
+  }
+  return L.join("\n");
+}
+
+/* ---------------- Comparateur ---------------- */
+function rendreComparateur(t){
+  t = t || calculerDevis();
+  var c = D.concurrent;
+  $("#c-nom").value = c.nom;
+  $("#c-prix").value = c.prixMois || "";
+  $("#c-financement").value = c.financementMois || "";
+  $("#c-duree").value = c.duree || "";
+  $("#c-frais").value = c.fraisUnique || "";
+  var carte = $("#carte-verdict");
+  if (!t.lignes.length || num(c.prixMois) <= 0){
+    carte.innerHTML = "<h2>Verdict</h2><div class='verdict neutre'>Bâtissez un devis TELUS puis saisissez le prix du concurrent pour comparer.</div>";
+    return;
+  }
+  var cc = calculerConcurrent();
+  var ecart = cc.total - t.tcoTotal;
+  var pct = cc.total ? (ecart / cc.total * 100) : 0;
+  var cls = ecart > 0.005 ? "avantage" : (ecart < -0.005 ? "desavantage" : "neutre");
+  var badge = ecart > 0.005 ? "TELUS avantageux ✔" : (ecart < -0.005 ? "TELUS désavantageux ✘" : "Égalité");
+  carte.innerHTML = "<h2>Verdict — TELUS vs " + esc(c.nom) + "</h2>" +
+    '<div class="defile-x"><table><thead><tr><th></th><th class=num>TELUS</th><th class=num>' + esc(c.nom) + "</th></tr></thead><tbody>" +
+    "<tr><td>Mensuel avant taxes</td><td class=num>" + fmtN(t.mensuelTotal) + "</td><td class=num>" + fmtN(num(c.prixMois)+num(c.financementMois)) + "</td></tr>" +
+    "<tr><td>Durée considérée</td><td class=num>devis (par produit)</td><td class=num>" + num(c.duree) + " mois</td></tr>" +
+    "<tr><td>TCO " + (t.taxesActives ? "taxes incluses" : "avant taxes") + "</td><td class=num><strong>" + fmtN(t.tcoTotal) + "</strong></td><td class=num><strong>" + fmtN(cc.total) + "</strong></td></tr>" +
+    "</tbody></table></div>" +
+    '<div class="verdict ' + cls + '" style="margin-top:10px">' + badge + " — écart de " + fmtM(Math.abs(ecart)) +
+    " (" + fmtPct(Math.abs(pct)) + ") sur la durée</div>";
+}
+
+/* ---------------- Vue vendeur ---------------- */
+function rendreVendeur(){
+  $("#v-mode-interne").checked = !!D.modeInterne;
+  var zone = $("#contenu-vendeur");
+  if (!D.modeInterne){
+    zone.innerHTML = '<p class="txt-mini" style="margin-top:10px">Cochez « Mode interne » pour afficher le score de commission et les recommandations d\'upsell. Cette vue n\'apparaît jamais à l\'impression.</p>';
+    return;
+  }
+  var k = calculerCommission();
+  var maillons = [
+    { nom:"MP — forfait mobile", taux:"100 %", atteint:k.etape>=1, suivantSi:k.etape===0 },
+    { nom:"+ HSIA (déclencheur clé)", taux:"125 %", atteint:k.etape>=2, suivantSi:k.etape===1 },
+    { nom:"+ BCon", taux:"150 %", atteint:k.etape>=3, suivantSi:k.etape===2 },
+    { nom:"+ Appareil connecté", taux:"200 %", atteint:k.etape>=4, suivantSi:k.etape===3 }
+  ];
+  var html = "<h2 style='margin-top:12px'>Chaîne de multiplicateurs de bundle</h2><div class='chaine'>" +
+    maillons.map(function(m){
+      var cls = m.atteint ? "atteint" : (m.suivantSi ? "suivant" : "");
+      return '<div class="maillon '+cls+'"><div class="taux">'+m.taux+'</div><div class="nom-maillon">'+esc(m.nom)+"</div></div>";
+    }).join("") + "</div>";
+
+  html += "<p>Multiplicateur actuel du devis : <span class='total-vedette'>" + (k.mult || 0) + " %</span></p>";
+
+  var recos = [];
+  if (!k.aWLS) recos.push("Aucun forfait mobile principal (MP) au devis — la chaîne de multiplicateurs ne s'active qu'avec du WLS.");
+  if (k.aWLS && !k.aHSIA) recos.push("⭐ Ajoute HSIA : multiplicateur 100 % → 125 %. C'est le déclencheur critique — le plus dur à obtenir, le plus payant.");
+  if (k.aWLS && k.aHSIA && !k.aBCon) recos.push("Ajoute BCon : multiplicateur 125 % → 150 %.");
+  if (k.aWLS && k.aHSIA && k.aBCon && !k.aCD) recos.push("Ajoute un appareil connecté (tablette/montre) : multiplicateur 150 % → 200 %.");
+  if (k.aBCon && !k.aHSIA) recos.push("BCon présent sans HSIA : la chaîne reste à 100 %. Ajouter HSIA porte le devis à 150 % d'un coup.");
+  if (k.etape === 4) recos.push("Bundle complet MP + HSIA + BCon + appareil connecté : multiplicateur maximal 200 %. 🎯");
+
+  html += "<h3>Recommandations d'upsell</h3><ul class='notes-auto'>" +
+    recos.map(function(r){ return "<li>"+esc(r)+"</li>"; }).join("") + "</ul>";
+
+  html += '<label class="case" style="margin:8px 0"><input type="checkbox" id="v-cd"'+(D.appareilConnecte?" checked":"")+"> Appareil connecté (tablette/montre) inclus au devis</label>";
+
+  html += "<h3>Estimation indicative</h3><div class='grille'>" +
+    '<label class="champ">Commission de base estimée ($)<input type="number" id="v-base" step="0.01" min="0" style="width:110px" value="'+esc(D.commissionBase)+'"></label>' +
+    '<label class="champ">SPIFFs ($, valeur nominale, non multipliés)<input type="number" id="v-spiff" step="0.01" min="0" style="width:110px" value="'+esc(D.spiff)+'"></label>' +
+    "</div>";
+  var estim = num(D.commissionBase) * (k.mult/100) + num(D.spiff);
+  html += "<p>Commission estimée : <span class='total-vedette vert'>" + fmtM(estim) + "</span> " +
+    "<span class='txt-mini'>(" + fmtN(num(D.commissionBase)) + " $ × " + (k.mult||0) + " % + " + fmtN(num(D.spiff)) + " $ SPIFF)</span></p>";
+  html += '<div class="avertissement">Purement indicatif — usage interne seulement. Ne jamais montrer cette vue au client. Elle est exclue de l\'impression et du CSV.</div>';
+  zone.innerHTML = html;
+}
+
+/* ---------------- Zone d'impression ---------------- */
+function rendreZoneImpression(t){
+  t = t || calculerDevis();
+  var z = $("#zone-impression");
+  var html = '<div class="entete-impression"><h1>TELUS Affaires — Devis / TCO</h1>' +
+    '<div class="txt-mini">Préparé le ' + aujourdhui() + " · Offres du " + esc(S.meta.dateMaj||"") + "</div></div>";
+  html += '<div class="carte">' + $("#table-recap").outerHTML.replace('id="table-recap"','') +
+          $("#bloc-taxes").innerHTML + $("#bloc-notes").innerHTML + "</div>";
+  if (num(D.concurrent.prixMois) > 0 && t.lignes.length){
+    html += '<div class="carte">' + $("#carte-verdict").innerHTML + "</div>";
+  }
+  z.innerHTML = html;
+}
+
+/* ---------------- Export CSV ---------------- */
+function exporterCSV(){
+  var t = calculerDevis();
+  if (!t.lignes.length){ toast("Devis vide — rien à exporter"); return; }
+  var sep = ";";
+  var L = [["Famille","Offre","Détail","Qté","Forfaits $/mois","Financement $/mois","Mensuel $/mois","Durée (mois)","Rabais+crédits $","TCO avant taxes $"].join(sep)];
+  function cel(v){ v = String(v==null?"":v).replace(/"/g,'""'); return /[;"\n]/.test(v) ? '"'+v+'"' : v; }
+  function n2(v){ return fmtN(v).replace(/ /g,""); }
+  t.lignes.forEach(function(l){
+    L.push([cel(l.famille),cel(l.nomOffre),cel(l.detail),l.qte,n2(l.mensuelForfaits),n2(l.mensuelFinancement),n2(l.mensuelTotal),l.duree,n2(l.rabais+l.credits),n2(l.tco)].join(sep));
+  });
+  L.push(["TOTAUX","","",t.go? n2(t.go)+" Go":"",n2(t.mensuelForfaits),n2(t.mensuelFinancement),n2(t.mensuelTotal),"",n2(t.rabais+t.credits),n2(t.tcoAvant)].join(sep));
+  if (t.taxesActives){
+    L.push(["Taxes ("+fmtTaux(num(S.parametres.tauxTaxe)*100).replace(/ /g,"")+" %)","","","","","","","","",n2(t.taxes)].join(sep));
+    L.push(["TCO TOTAL taxes incluses","","","","","","","","",n2(t.tcoTotal)].join(sep));
+  }
+  telecharger("devis_telus_"+aujourdhui()+".csv", "﻿"+L.join("\r\n"), "text/csv;charset=utf-8");
+}
+
+/* ---------------- Export / Import JSON ---------------- */
+function telecharger(nom, contenu, type){
+  try{
+    var blob = new Blob([contenu], { type: type || "application/octet-stream" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = nom;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+    toast("Fichier généré : " + nom);
+  }catch(e){ toast("Téléchargement bloqué par l'iframe — copiez via Résumé"); }
+}
+function exporterJSON(){
+  var paquet = { version:"telus_offres_v1", exporteLe: new Date().toISOString(), etat: S, devis: D };
+  telecharger("telus_offres_"+aujourdhui()+".json", JSON.stringify(paquet, null, 2), "application/json");
+}
+function importerJSON(fichier){
+  var lecteur = new FileReader();
+  lecteur.onload = function(){
+    try{
+      var p = JSON.parse(lecteur.result);
+      var etat = p.etat && p.etat.offres ? p.etat : (p.offres ? p : null);
+      if (!etat) throw new Error("format");
+      S = fusionEtat(etatDefaut(), etat);
+      if (p.devis && Array.isArray(p.devis.items)) D = Object.assign(devisDefaut(), p.devis);
+      sauver(true);
+      rendreOffres(); rendreItems(); rendreRecap();
+      toast("Import réussi (" + ((S.offres.WLS||[]).length + (S.offres.HSIA||[]).length + (S.offres.BCon||[]).length + (S.offres.TSB||[]).length) + " offres)");
+    }catch(e){ toast("Fichier JSON invalide"); }
+  };
+  lecteur.readAsText(fichier);
+}
+
+/* ================================================================
+   ÉVÉNEMENTS (délégation — aucun <form>, aucun submit)
+   ================================================================ */
+document.addEventListener("click", function(ev){
+  var cible = ev.target.closest("[data-action],[data-onglet]");
+  if (!cible) return;
+
+  if (cible.dataset.onglet){
+    document.querySelectorAll("nav.tabs button").forEach(function(b){ b.classList.toggle("actif", b === cible); });
+    document.querySelectorAll("section.onglet").forEach(function(s){ s.classList.remove("actif"); });
+    $("#onglet-" + cible.dataset.onglet).classList.add("actif");
+    return;
+  }
+  var action = cible.dataset.action;
+  if (action === "enregistrer"){ sauver(); }
+  if (action === "exporter-json"){ exporterJSON(); }
+  if (action === "importer-json"){ $("#in-fichier-json").click(); }
+  if (action === "reinitialiser"){
+    if (confirm("Réinitialiser TOUTES les offres, paramètres et le devis aux valeurs par défaut ?")){
+      S = etatDefaut(); D = devisDefaut(); sauver(true);
+      rendreOffres(); rendreItems(); rendreRecap();
+      toast("Réinitialisé");
+    }
+  }
+  if (action === "ajouter-offre"){
+    var fam = cible.dataset.fam;
+    S.offres[fam].push(offreDefaut(fam));
+    sauver(true); rendreTableOffres(fam); majSelectOffre();
+  }
+  if (action === "supprimer-offre"){
+    var f = cible.dataset.fam, i = +cible.dataset.idx;
+    var off = S.offres[f][i];
+    if (off && confirm("Supprimer l'offre « " + (off.nom||"") + " » ?")){
+      S.offres[f].splice(i,1);
+      sauver(true); rendreTableOffres(f); majSelectOffre(); rendreRecap();
+    }
+  }
+  if (action === "ajouter-item"){
+    var famS = $("#sel-famille").value, offreId = $("#sel-offre").value;
+    if (!offreId){ toast("Saisissez d'abord une offre dans « Offres du jour »"); return; }
+    D.items.push(itemDefaut(famS, offreId));
+    sauver(true); rendreItems(); rendreRecap();
+  }
+  if (action === "supprimer-item"){
+    D.items = D.items.filter(function(it){ return it.uid !== cible.dataset.uid; });
+    sauver(true); rendreItems(); rendreRecap();
+  }
+  if (action === "vider-devis"){
+    if (D.items.length && confirm("Vider le devis en cours ?")){
+      D.items = []; sauver(true); rendreItems(); rendreRecap();
+    }
+  }
+  if (action === "imprimer"){ rendreZoneImpression(); window.print(); }
+  if (action === "export-csv"){ exporterCSV(); }
+  if (action === "copier-resume"){
+    var txt = $("#txt-resume").value;
+    var fini = function(ok){ toast(ok ? "Résumé copié" : "Copie bloquée — sélectionnez le texte manuellement"); };
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ fini(true); }, function(){ copieSecours(txt, fini); });
+    } else { copieSecours(txt, fini); }
+  }
+});
+function copieSecours(txt, cb){
+  try{
+    var ta = $("#txt-resume"); ta.focus(); ta.select();
+    cb(document.execCommand("copy"));
+  }catch(e){ cb(false); }
+}
+
+$("#in-fichier-json").addEventListener("change", function(){
+  if (this.files && this.files[0]) importerJSON(this.files[0]);
+  this.value = "";
+});
+
+/* Changements dans les tableaux d'offres */
+document.addEventListener("change", function(ev){
+  var el = ev.target;
+
+  if (el.hasAttribute("data-champ-offre")){
+    var fam = el.dataset.fam, i = +el.dataset.idx, cle = el.dataset.cle, type = el.dataset.type;
+    var offre = S.offres[fam][i]; if (!offre) return;
+    if (type === "checkbox") offre[cle] = el.checked;
+    else if (type === "number") offre[cle] = el.value === "" ? "" : num(el.value);
+    else if (type === "csv") offre[cle] = el.value.split(/[;,]/).map(function(s){ return s.trim(); }).filter(Boolean);
+    else offre[cle] = el.value;
+    // Auto-suggestion prix PPA à la saisie du prix de base
+    if (fam === "WLS" && cle === "prixMois" && (offre.prixMoisPPA === "" || offre.prixMoisPPA == null)){
+      offre.prixMoisPPA = Math.max(0, num(offre.prixMois) - num(S.parametres.rabaisPPA));
+      rendreTableOffres("WLS");
+    }
+    sauver(true); majSelectOffre(); rendreRecap();
+    return;
+  }
+
+  if (el.hasAttribute("data-cat-fin")){
+    var c = S.categoriesAppareil[+el.dataset.idx];
+    if (c){ c.financement24 = num(el.value); sauver(true); rendreItems(); rendreRecap(); }
+    return;
+  }
+
+  if (el.hasAttribute("data-champ-item")){
+    var it = D.items.find(function(x){ return x.uid === el.dataset.uid; });
+    if (!it) return;
+    var cleI = el.dataset.cle;
+    if (el.type === "checkbox") it[cleI] = el.checked;
+    else if (el.tagName === "SELECT") it[cleI] = el.value;
+    else it[cleI] = num(el.value);
+    if (cleI === "lignes" && it.famille === "WLS") it.nbAppareils = Math.min(num(it.nbAppareils), num(it.lignes)) || num(it.lignes);
+    sauver(true); rendreRecap();
+    return;
+  }
+
+  switch (el.id){
+    case "in-date-maj": S.meta.dateMaj = el.value; sauver(true); break;
+    case "p-taxes-actives": S.parametres.taxesActives = el.checked; $("#d-taxes").checked = el.checked; sauver(true); rendreRecap(); break;
+    case "d-taxes": S.parametres.taxesActives = el.checked; $("#p-taxes-actives").checked = el.checked; sauver(true); rendreRecap(); break;
+    case "p-taux-taxe": S.parametres.tauxTaxe = num(el.value)/100; sauver(true); rendreRecap(); break;
+    case "p-rabais-ppa": S.parametres.rabaisPPA = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-vol-2": S.parametres.volumeMobile["2"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-vol-3": S.parametres.volumeMobile["3"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-vol-4": S.parametres.volumeMobile["4"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-lic-15": S.parametres.volumeLicences["15"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-lic-25": S.parametres.volumeLicences["25"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-lic-50": S.parametres.volumeLicences["50"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-lic-100": S.parametres.volumeLicences["100"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "p-lic-200": S.parametres.volumeLicences["200"] = num(el.value); sauver(true); rendreRecap(); break;
+    case "sel-famille": majSelectOffre(); break;
+    case "d-usage-go": D.usageGo = el.value; sauver(true); rendreRecap(); break;
+    case "c-nom": D.concurrent.nom = el.value; sauver(true); rendreRecap(); break;
+    case "c-prix": D.concurrent.prixMois = num(el.value); sauver(true); rendreRecap(); break;
+    case "c-financement": D.concurrent.financementMois = num(el.value); sauver(true); rendreRecap(); break;
+    case "c-duree": D.concurrent.duree = num(el.value); sauver(true); rendreRecap(); break;
+    case "c-frais": D.concurrent.fraisUnique = num(el.value); sauver(true); rendreRecap(); break;
+    case "v-mode-interne": D.modeInterne = el.checked; sauver(true); rendreVendeur(); break;
+    case "v-cd": D.appareilConnecte = el.checked; sauver(true); rendreVendeur(); break;
+    case "v-base": D.commissionBase = num(el.value); sauver(true); rendreVendeur(); break;
+    case "v-spiff": D.spiff = num(el.value); sauver(true); rendreVendeur(); break;
+  }
+});
+
+/* ---------------- Démarrage ---------------- */
+charger();
+rendreOffres();
+rendreItems();
+rendreRecap();
+</script>
+</body>
+</html>
