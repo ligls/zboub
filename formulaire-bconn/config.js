@@ -14,8 +14,8 @@ window.BCONN_CONFIG = {
 
   "app": {
     "title": "TELUS Business Connect",
-    "subtitle": "Questionnaire de qualification — Solution téléphonique d'affaires",
-    "intro": "Ce questionnaire prend environ 5 à 8 minutes. Vos réponses nous permettront de préparer une proposition personnalisée pour votre entreprise. Vos réponses sont sauvegardées automatiquement dans votre navigateur.",
+    "subtitle": "Questionnaire — Solution téléphonique d'affaires",
+    "intro": "Ce questionnaire prend environ 4 à 6 minutes. Vos réponses nous permettront de préparer une proposition personnalisée pour votre entreprise. Vos réponses sont sauvegardées automatiquement dans votre navigateur.",
     "showRecommendationToClient": true,
     "formspreeEndpoint": ""
   },
@@ -24,9 +24,9 @@ window.BCONN_CONFIG = {
     { "id": "mobile",       "label": "Mobile",              "description": "Appels et SMS via l'application mobile uniquement." },
     { "id": "voice",        "label": "Voice",               "description": "Appels de base, boîte vocale, appels locaux illimités." },
     { "id": "voiceplus",    "label": "Voice+",              "description": "Voice + présence, intégrations Office/Google, fax de base." },
-    { "id": "enhanced",     "label": "Enhanced",            "description": "Voice+ + enregistrement d'appels, IVR avancé, files d'attente avancées." },
-    { "id": "complete",     "label": "Complete",            "description": "Enhanced + conférences audio, vidéoconférence, intégrations CRM (Salesforce, Zendesk), chat/collaboration, analytics, call delegation." },
-    { "id": "completeplus", "label": "Complete Plus (BTL)", "description": "Complete + supervision des appels, hotdesking, accès API, archivage/conformité, multi-site complet, files d'attente en débordement." }
+    { "id": "enhanced",     "label": "Enhanced",            "description": "Voice+ + enregistrement d'appels, RVI avancé, files d'attente avancées." },
+    { "id": "complete",     "label": "Complete",            "description": "Enhanced + conférences audio, vidéoconférence, intégrations CRM (Salesforce, Zendesk), chat/collaboration, analytics." },
+    { "id": "completeplus", "label": "Complete Plus (BTL)", "description": "Complete + supervision des appels, hotdesking, accès API, archivage/conformité, multisite complet, files d'attente en débordement." }
   ],
 
   "pricing": {
@@ -51,37 +51,39 @@ window.BCONN_CONFIG = {
       "icon": "📞",
       "questions": [
         {
-          "id": "q1", "type": "tel", "required": true,
+          "id": "num_principal", "type": "tel", "required": true,
           "label": "Quel est votre numéro principal d'entreprise?",
           "placeholder": "Ex. : 418 555-0123"
         },
         {
-          "id": "q2", "type": "yesno", "required": true,
-          "label": "Avez-vous un numéro 1-800 / sans frais?"
-        },
-        {
-          "id": "q2a", "type": "radio", "required": true,
-          "label": "Pour ce numéro sans frais, souhaitez-vous :",
-          "showIf": { "q": "q2", "equals": "oui" },
+          "id": "num_sansfrais", "type": "cards", "multi": false, "required": true,
+          "label": "Avez-vous besoin d'un numéro sans frais (1-800)?",
           "options": [
-            { "value": "porter",  "label": "Le transférer chez TELUS (portabilité)" },
-            { "value": "nouveau", "label": "En obtenir un nouveau" }
+            { "value": "porter",  "label": "Oui — nous en avons un à transférer", "tag": "Portabilité" },
+            { "value": "nouveau", "label": "Oui — nous en voulons un nouveau",    "tag": "Nouveau numéro" },
+            { "value": "non",     "label": "Non" }
           ]
         },
         {
-          "id": "q3", "type": "yesno", "required": true,
-          "label": "Avez-vous d'autres numéros à transférer (porter)?"
+          "id": "num_autres", "type": "cards", "multi": true, "required": true, "exclusive": "aucun",
+          "label": "Et vos autres numéros?",
+          "help": "Choisissez tout ce qui s'applique",
+          "options": [
+            { "value": "porter",   "label": "Nous avons des numéros existants à transférer", "tag": "Portabilité" },
+            { "value": "nouveaux", "label": "Il nous faudra de nouveaux numéros",            "tag": "Nouveaux numéros" },
+            { "value": "aucun",    "label": "Aucun autre numéro" }
+          ]
         },
         {
-          "id": "q3a", "type": "textarea", "required": true,
+          "id": "num_autres_liste", "type": "textarea", "required": true,
           "label": "Listez les numéros à transférer (un par ligne)",
-          "showIf": { "q": "q3", "equals": "oui" },
+          "showIf": { "q": "num_autres", "includes": "porter" },
           "placeholder": "418 555-0001\n418 555-0002"
         },
         {
-          "id": "q3b", "type": "number", "required": false, "min": 0,
-          "label": "Aurez-vous besoin de nouveaux numéros? Indiquez combien (0 si aucun)",
-          "showIf": { "q": "q3", "equals": "non" }
+          "id": "num_autres_nb", "type": "number", "required": true, "min": 1,
+          "label": "Combien de nouveaux numéros?",
+          "showIf": { "q": "num_autres", "includes": "nouveaux" }
         }
       ]
     },
@@ -92,7 +94,7 @@ window.BCONN_CONFIG = {
       "icon": "🏢",
       "questions": [
         {
-          "id": "q4", "type": "radio", "required": true,
+          "id": "sit_fournisseur", "type": "radio", "required": true,
           "label": "Qui est votre fournisseur téléphonique actuel?",
           "options": [
             { "value": "telus",     "label": "TELUS" },
@@ -104,7 +106,7 @@ window.BCONN_CONFIG = {
           ]
         },
         {
-          "id": "q5", "type": "radio", "required": true,
+          "id": "sit_systeme", "type": "radio", "required": true,
           "label": "Quel est votre système téléphonique actuel?",
           "options": [
             { "value": "analogique", "label": "Ligne(s) analogique(s)" },
@@ -115,22 +117,22 @@ window.BCONN_CONFIG = {
           ]
         },
         {
-          "id": "q6", "type": "yesno", "required": true,
+          "id": "sit_engagement", "type": "yesno", "required": true,
           "label": "Avez-vous un engagement/contrat en cours?"
         },
         {
-          "id": "q6a", "type": "date", "required": true,
+          "id": "sit_eng_fin", "type": "date", "required": true,
           "label": "Date de fin de l'engagement",
-          "showIf": { "q": "q6", "equals": "oui" }
+          "showIf": { "q": "sit_engagement", "equals": "oui" }
         },
         {
-          "id": "q6b", "type": "currency", "required": true, "min": 0,
+          "id": "sit_eng_cout", "type": "currency", "required": true, "min": 0,
           "label": "Coût mensuel actuel (avant taxes)",
-          "showIf": { "q": "q6", "equals": "oui" },
+          "showIf": { "q": "sit_engagement", "equals": "oui" },
           "placeholder": "Ex. : 250"
         },
         {
-          "id": "q7", "type": "checkbox", "required": true, "exclusive": "aucun",
+          "id": "sit_services", "type": "checkbox", "required": true, "exclusive": "aucun",
           "label": "Avez-vous déjà des services TELUS?",
           "options": [
             { "value": "tsb",      "label": "Internet affaires (TSB)" },
@@ -140,7 +142,7 @@ window.BCONN_CONFIG = {
           ]
         },
         {
-          "id": "q8", "type": "radio", "required": true,
+          "id": "sit_internet", "type": "radio", "required": true,
           "label": "Quelle est la vitesse de votre Internet actuel (ou vendu)?",
           "options": [
             { "value": "moins50", "label": "Moins de 50 Mbps" },
@@ -149,217 +151,144 @@ window.BCONN_CONFIG = {
             { "value": "1g5plus", "label": "1,5 Gbps et plus" },
             { "value": "nsp",     "label": "Je ne sais pas" }
           ]
-        },
-        {
-          "id": "q9", "type": "yesno", "required": true,
-          "label": "Avez-vous un système d'alarme relié à votre ligne téléphonique fixe?"
-        },
-        {
-          "id": "alerte_alarme", "type": "alert", "style": "warning",
-          "showIf": { "q": "q9", "equals": "oui" },
-          "text": "Important : votre système d'alarme utilise la ligne fixe. Une solution alternative (ligne numérique ou cellulaire pour l'alarme) devra être prévue lors de la migration."
         }
       ]
     },
 
     {
-      "id": "usage",
-      "title": "Utilisation et fonctionnalités",
-      "icon": "👥",
+      "id": "lignes",
+      "title": "Combien de lignes téléphoniques votre entreprise utilisera-t-elle?",
+      "icon": "🔢",
       "questions": [
         {
-          "id": "q10", "type": "number", "required": true, "min": 1,
-          "label": "Combien d'employés utiliseront le téléphone?",
-          "help": "Chaque employé = 1 licence = 1 poste."
-        },
-        {
-          "id": "q11", "type": "checkbox", "required": true,
-          "label": "Comment vos employés utiliseront-ils le service?",
-          "options": [
-            { "value": "mobile",   "label": "Application mobile" },
-            { "value": "desktop",  "label": "Application de bureau (PC/Mac)" },
-            { "value": "combines", "label": "Combinés téléphoniques physiques" }
+          "id": "lignes", "type": "counters", "required": true,
+          "label": "Indiquez une quantité pour chaque type qui s'applique",
+          "requireMin": {
+            "fields": ["ind", "part", "ext"], "total": 1,
+            "message": "Indiquez au moins une ligne individuelle, partagée ou une extension."
+          },
+          "items": [
+            { "value": "ind",  "icon": "👤", "label": "Lignes individuelles",
+              "description": "Pour tout employé ayant un numéro, un poste ou une messagerie vocale distincts",
+              "licence": true },
+            { "value": "part", "icon": "👥", "label": "Lignes partagées",
+              "description": "Pour tout téléphone partagé par des employés, comme dans une salle de conférence",
+              "licence": true },
+            { "value": "ext",  "icon": "🔔", "label": "Extensions simples",
+              "description": "Poste sans boîte vocale ni mise en garde d'appels (entrepôt, cafétéria, etc.)",
+              "extension": true },
+            { "value": "pub",  "icon": "🚨", "label": "Lignes publiques",
+              "description": "Requises pour les alarmes incendie, les systèmes de sécurité et les ascenseurs" }
           ]
         },
         {
-          "id": "q11a", "type": "number", "required": true, "min": 1,
-          "label": "Combien de combinés physiques?",
-          "showIf": { "q": "q11", "includes": "combines" }
-        },
-        {
-          "id": "q12", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin d'envoyer/recevoir des messages textes (SMS) avec le numéro d'entreprise?"
-        },
-        {
-          "id": "q13", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de l'enregistrement des appels?"
-        },
-        {
-          "id": "q14", "type": "yesno", "required": true,
-          "label": "Utilisez-vous un CRM ou un système de point de vente à intégrer?"
-        },
-        {
-          "id": "q14a", "type": "radio", "required": true,
-          "label": "Lequel?",
-          "showIf": { "q": "q14", "equals": "oui" },
-          "options": [
-            { "value": "salesforce", "label": "Salesforce" },
-            { "value": "hubspot",    "label": "HubSpot" },
-            { "value": "lightspeed", "label": "Lightspeed" },
-            { "value": "m365",       "label": "Microsoft 365" },
-            { "value": "autre",      "label": "Autre" }
-          ]
-        },
-        {
-          "id": "q14b", "type": "text", "required": true,
-          "label": "Précisez votre CRM / système de point de vente",
-          "showIf": { "q": "q14a", "equals": "autre" }
-        },
-        {
-          "id": "q15", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de gérer une file d'attente d'appels (plusieurs appels en attente distribués aux employés)?"
-        },
-        {
-          "id": "q16", "type": "yesno", "required": true,
-          "label": "Besoin de transfert interne direct entre les combinés (boutons de postes)?"
+          "id": "alerte_pub", "type": "alert", "style": "warning",
+          "showIf": { "q": "lignes", "field": "pub", "gt": 0 },
+          "text": "Les alarmes, systèmes de sécurité et ascenseurs reliés à une ligne fixe nécessitent une solution dédiée (ligne numérique ou cellulaire) — votre conseiller la prévoira dans la proposition."
         }
       ]
     },
 
     {
-      "id": "equipements",
-      "title": "Équipements et configuration",
-      "icon": "🔧",
+      "id": "communication",
+      "title": "Comment votre entreprise doit-elle communiquer?",
+      "icon": "💬",
       "questions": [
         {
-          "id": "q17", "type": "yesno", "required": true,
-          "label": "Avez-vous un fax?"
-        },
-        {
-          "id": "q17a", "type": "radio", "required": true,
-          "label": "Votre fax est-il numérique ou analogique?",
-          "showIf": { "q": "q17", "equals": "oui" },
+          "id": "comm", "type": "cards", "multi": true, "required": true, "exclusive": "skip",
+          "label": "Choisissez tout ce qui s'applique",
           "options": [
-            { "value": "numerique",  "label": "Numérique" },
-            { "value": "analogique", "label": "Analogique" }
+            { "value": "rvi",         "label": "Nous recevons tant d'appels qu'il nous faut un système automatisé pour y répondre", "tag": "RVI à niveaux et auto-réception" },
+            { "value": "queue",       "label": "Nous devons pouvoir mettre les appels en attente pour que d'autres y répondent",    "tag": "File d'attente d'appels" },
+            { "value": "rec",         "label": "Nous devons pouvoir enregistrer les appels téléphoniques",                          "tag": "Enregistrement des appels" },
+            { "value": "video",       "label": "Nous devons faire des appels vidéo à distance",                                     "tag": "Vidéoconférence" },
+            { "value": "audioconf",   "label": "Nous tenons des conférences audio avec des participants externes",                  "tag": "Conférences audio illimitées" },
+            { "value": "presence",    "label": "Nous voulons savoir si le poste est disponible ou occupé avant de joindre un collègue", "tag": "Présence" },
+            { "value": "sms",         "label": "Nous devons envoyer et recevoir des textos avec le numéro d'entreprise",            "tag": "SMS d'affaires" },
+            { "value": "supervision", "label": "Des superviseurs doivent pouvoir écouter, assister ou reprendre des appels",        "tag": "Supervision et coaching" },
+            { "value": "skip",        "label": "Sauter / Je ne sais pas trop" }
           ]
         },
         {
-          "id": "alerte_fax", "type": "alert", "style": "info",
-          "showIf": { "q": "q17a", "equals": "analogique" },
-          "text": "Un adaptateur ATA sera prévu pour connecter votre fax analogique."
-        },
-        {
-          "id": "q18", "type": "yesno", "required": true,
-          "label": "Avez-vous un système d'annonce interne / intercom / haut-parleur de plafond?"
-        },
-        {
-          "id": "alerte_intercom", "type": "alert", "style": "info",
-          "showIf": { "q": "q18", "equals": "oui" },
-          "text": "Un équipement compatible (ATA/adaptateur) sera prévu pour votre système d'annonce."
-        },
-        {
-          "id": "q19", "type": "yesno", "required": true,
-          "label": "Besoin de haut-parleur (mains libres) sur les combinés?"
-        },
-        {
-          "id": "q20", "type": "yesno", "required": true,
-          "label": "Avez-vous des prises Ethernet disponibles aux postes de travail?"
-        },
-        {
-          "id": "alerte_ethernet", "type": "alert", "style": "info",
-          "showIf": { "q": "q20", "equals": "non" },
-          "text": "Sans prises Ethernet, des combinés sans fil WiFi ou DECT (ex. Yealink W76P) seront recommandés."
-        },
-        {
-          "id": "q21", "type": "yesno", "required": true,
-          "label": "Besoin d'un téléphone de conférence (salle de réunion)?"
+          "id": "comm_rvi_nb", "type": "number", "required": false, "min": 1,
+          "label": "Environ combien de choix/menus votre accueil automatisé devrait-il offrir?",
+          "showIf": { "q": "comm", "includes": "rvi" }
         }
       ]
     },
 
     {
-      "id": "avancees",
-      "title": "Fonctionnalités avancées et options",
+      "id": "fonctionnement",
+      "title": "Dites-nous en plus sur le fonctionnement de votre entreprise",
       "icon": "⚙️",
       "questions": [
         {
-          "id": "q22", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de conférences audio illimitées (webinaires, réunions clients avec participants externes)?"
-        },
-        {
-          "id": "q23", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de réunions vidéo / vidéoconférence (Business Connect Video) pour vos employés?"
-        },
-        {
-          "id": "q24", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de voir la disponibilité en temps réel de vos collègues (statut présence : disponible, occupé, absent)?"
-        },
-        {
-          "id": "q25", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de supervision/coaching des appels (écoute, assistance, reprise d'appel par un superviseur)?"
-        },
-        {
-          "id": "q26", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin d'un menu vocal personnalisé (IVR) pour automatiser l'accueil des appels?"
-        },
-        {
-          "id": "q26a", "type": "number", "required": true, "min": 1,
-          "label": "Combien de branches/menus avez-vous besoin?",
-          "showIf": { "q": "q26", "equals": "oui" }
-        },
-        {
-          "id": "q27", "type": "yesno", "required": true,
-          "label": "Avez-vous plusieurs succursales/emplacements à gérer (multi-site)?"
-        },
-        {
-          "id": "q27a", "type": "number", "required": true, "min": 2,
-          "label": "Combien de sites?",
-          "showIf": { "q": "q27", "equals": "oui" }
-        },
-        {
-          "id": "q28", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de partage de documents et collaboration en équipe (chat interne, partage de fichiers, gestion de tâches)?"
-        },
-        {
-          "id": "q29", "type": "checkbox", "required": true, "exclusive": "aucune",
-          "label": "Avez-vous besoin d'intégrations avancées avec vos systèmes actuels?",
+          "id": "fonc", "type": "cards", "multi": true, "required": true, "exclusive": "skip",
+          "label": "Choisissez tout ce qui s'applique",
           "options": [
-            { "value": "salesforce", "label": "Salesforce" },
-            { "value": "zendesk",    "label": "Zendesk" },
-            { "value": "dynamics",   "label": "Microsoft Dynamics" },
-            { "value": "hubspot",    "label": "HubSpot" },
-            { "value": "oracle",     "label": "Oracle" },
-            { "value": "okta",       "label": "Okta" },
-            { "value": "zapier",     "label": "Zapier" },
-            { "value": "aucune",     "label": "Aucune" }
+            { "value": "multisite",  "label": "Nous avons plus d'un immeuble ou d'une succursale",                                  "tag": "Gestion multisite" },
+            { "value": "m365",       "label": "Nous utilisons régulièrement Microsoft 365 ou Google Workspace",                     "tag": "Intégration à M365 ou G.W." },
+            { "value": "annonce",    "label": "Nous devons faire des annonces audio aux employés sur leurs appareils",              "tag": "Annonce interne et interphone" },
+            { "value": "crm",        "label": "Nous utilisons un logiciel de gestion de relation client (CRM)",                     "tag": "Intégration au logiciel de CRM" },
+            { "value": "fax",        "label": "Nous envoyons et recevons des télécopies",                                           "tag": "Télécopie" },
+            { "value": "collab",     "label": "Nous partageons des documents et collaborons en équipe (chat, fichiers, tâches)",    "tag": "Collaboration d'équipe" },
+            { "value": "analytics",  "label": "Nous voulons des rapports d'utilisation et des tableaux de bord",                    "tag": "Rapports et analyses" },
+            { "value": "compliance", "label": "Nous devons conserver appels, textos ou télécopies pour audit ou conformité",        "tag": "Archivage et conformité" },
+            { "value": "api",        "label": "Nous voulons développer des intégrations sur mesure",                                "tag": "Accès API" },
+            { "value": "skip",       "label": "Sauter / Je ne sais pas trop" }
           ]
         },
         {
-          "id": "q29a", "type": "yesno", "required": true,
-          "label": "Ces intégrations sont-elles critiques pour vous?",
-          "showIf": { "q": "q29", "includesOtherThan": "aucune" }
+          "id": "fonc_sites_nb", "type": "number", "required": true, "min": 2,
+          "label": "Combien d'emplacements?",
+          "showIf": { "q": "fonc", "includes": "multisite" }
         },
         {
-          "id": "q30", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin d'archivage et conformité (conservation des enregistrements/SMS/fax pour audit ou exigences légales)?"
+          "id": "fonc_crm", "type": "text", "required": true,
+          "label": "Quel CRM utilisez-vous?",
+          "placeholder": "Salesforce, Zendesk, HubSpot, Microsoft Dynamics…",
+          "showIf": { "q": "fonc", "includes": "crm" }
         },
         {
-          "id": "q31", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin d'un accès API pour développer des intégrations sur mesure?"
+          "id": "fax_type", "type": "cards", "multi": true, "required": true,
+          "label": "De quel type de service de télécopie votre entreprise a-t-elle besoin?",
+          "showIf": { "q": "fonc", "includes": "fax" },
+          "options": [
+            { "value": "numerique",    "label": "Télécopie numérique",
+              "description": "Tous nos forfaits comprennent Fax IP, un service de télécopie en ligne convivial sans télécopieur." },
+            { "value": "traditionnel", "label": "Télécopieur traditionnel",
+              "description": "Si vous avez besoin d'un télécopieur traditionnel, vous aurez besoin de lignes supplémentaires et d'un adaptateur de terminal analogique pour le relier au réseau." }
+          ]
+        }
+      ]
+    },
+
+    {
+      "id": "telephones",
+      "title": "De quels téléphones votre entreprise a-t-elle besoin?",
+      "icon": "📱",
+      "questions": [
+        {
+          "id": "tels", "type": "cards", "multi": true, "required": true,
+          "label": "Choisissez tout ce qui s'applique",
+          "options": [
+            { "value": "bureau",         "icon": "☎️", "label": "Téléphones de bureau",
+              "description": "Combinés IP filaires classiques" },
+            { "value": "sansfil",        "icon": "📶", "label": "Téléphones de bureau sans fil",
+              "description": "WiFi ou DECT — idéal sans câblage Ethernet aux postes" },
+            { "value": "receptionniste", "icon": "🎛️", "label": "Téléphones de réceptionniste",
+              "description": "Touches de postes (BLF) pour voir les lignes et transférer rapidement" },
+            { "value": "conference",     "icon": "🔊", "label": "Téléphones conférence",
+              "description": "Pour les salles de réunion" },
+            { "value": "apps",           "icon": "💻", "label": "Applications seulement",
+              "description": "Vos employés utiliseront l'application mobile ou de bureau" },
+            { "value": "existants",      "icon": "♻️", "label": "Nous voulons utiliser des appareils que nous avons déjà" }
+          ]
         },
         {
-          "id": "q32", "type": "yesno", "required": true,
-          "label": "Avez-vous besoin de rapports d'utilisation et d'analyse (tableaux de bord, performance des files d'attente, etc.)?"
-        },
-        {
-          "id": "q33", "type": "yesno", "required": true,
-          "label": "Avez-vous des assistantes exécutives qui gèrent les appels pour d'autres employés (call delegation)?"
-        },
-        {
-          "id": "q33a", "type": "number", "required": true, "min": 1,
-          "label": "Combien?",
-          "showIf": { "q": "q33", "equals": "oui" }
+          "id": "tels_existants", "type": "text", "required": false,
+          "label": "Quels appareils avez-vous déjà? (marque/modèle)",
+          "showIf": { "q": "tels", "includes": "existants" }
         }
       ]
     },
@@ -369,32 +298,18 @@ window.BCONN_CONFIG = {
       "title": "Vos coordonnées",
       "icon": "✉️",
       "questions": [
-        {
-          "id": "c_nom", "type": "text", "required": true,
-          "label": "Votre nom complet"
-        },
-        {
-          "id": "c_entreprise", "type": "text", "required": true,
-          "label": "Nom de l'entreprise"
-        },
-        {
-          "id": "c_courriel", "type": "email", "required": true,
-          "label": "Courriel",
-          "placeholder": "vous@entreprise.com"
-        },
-        {
-          "id": "c_tel", "type": "tel", "required": true,
-          "label": "Téléphone",
-          "placeholder": "Ex. : 418 555-0123"
-        },
+        { "id": "c_nom",        "type": "text",  "required": true, "label": "Votre nom complet" },
+        { "id": "c_entreprise", "type": "text",  "required": true, "label": "Nom de l'entreprise" },
+        { "id": "c_courriel",   "type": "email", "required": true, "label": "Courriel", "placeholder": "vous@entreprise.com" },
+        { "id": "c_tel",        "type": "tel",   "required": true, "label": "Téléphone", "placeholder": "Ex. : 418 555-0123" },
         {
           "id": "c_moment", "type": "radio", "required": true,
           "label": "Meilleur moment pour un suivi",
           "options": [
-            { "value": "matin",       "label": "Matin (8 h à 12 h)" },
-            { "value": "apresmidi",   "label": "Après-midi (12 h à 17 h)" },
-            { "value": "findejournee","label": "Fin de journée (17 h à 19 h)" },
-            { "value": "nimporte",    "label": "Peu importe" }
+            { "value": "matin",        "label": "Matin (8 h à 12 h)" },
+            { "value": "apresmidi",    "label": "Après-midi (12 h à 17 h)" },
+            { "value": "findejournee", "label": "Fin de journée (17 h à 19 h)" },
+            { "value": "nimporte",     "label": "Peu importe" }
           ]
         }
       ]
@@ -408,58 +323,57 @@ window.BCONN_CONFIG = {
      le plus élevé de toutes les règles déclenchées.
      -------------------------------------------------------------------------- */
   "recommendationRules": [
-    { "when": { "q": "q11", "includesAny": ["desktop", "combines"] }, "tier": "voice",        "reason": "Utilisation sur application de bureau ou combinés physiques" },
-    { "when": { "q": "q17", "equals": "oui" },                        "tier": "voice",        "reason": "Service de fax requis" },
-    { "when": { "q": "q24", "equals": "oui" },                        "tier": "voiceplus",    "reason": "Présence en temps réel des collègues" },
-    { "when": { "q": "q13", "equals": "oui" },                        "tier": "enhanced",     "reason": "Enregistrement des appels" },
-    { "when": { "q": "q26", "equals": "oui" },                        "tier": "enhanced",     "reason": "Menu vocal personnalisé (IVR)" },
-    { "when": { "q": "q14", "equals": "oui" },                        "tier": "complete",     "reason": "Intégration CRM / point de vente" },
-    { "when": { "q": "q22", "equals": "oui" },                        "tier": "complete",     "reason": "Conférences audio illimitées" },
-    { "when": { "q": "q23", "equals": "oui" },                        "tier": "complete",     "reason": "Vidéoconférence (Business Connect Video)" },
-    { "when": { "q": "q28", "equals": "oui" },                        "tier": "complete",     "reason": "Collaboration d'équipe avancée (chat, fichiers, tâches)" },
-    { "when": { "q": "q29", "includesOtherThan": "aucune" },          "tier": "complete",     "reason": "Intégrations avancées (Salesforce, Zendesk, Dynamics, etc.)" },
-    { "when": { "q": "q32", "equals": "oui" },                        "tier": "complete",     "reason": "Rapports d'utilisation et analytics" },
-    { "when": { "q": "q33", "equals": "oui" },                        "tier": "complete",     "reason": "Call delegation (assistantes exécutives)" },
-    { "when": { "q": "q25", "equals": "oui" },                        "tier": "completeplus", "reason": "Supervision et coaching des appels" },
-    { "when": { "q": "q27", "equals": "oui" },                        "tier": "completeplus", "reason": "Gestion multi-site" },
-    { "when": { "q": "q30", "equals": "oui" },                        "tier": "completeplus", "reason": "Archivage et conformité" },
-    { "when": { "q": "q31", "equals": "oui" },                        "tier": "completeplus", "reason": "Accès API pour intégrations sur mesure" }
+    { "when": { "q": "tels", "includesAny": ["bureau", "sansfil", "receptionniste", "conference"] }, "tier": "voice", "reason": "Combinés téléphoniques physiques" },
+    { "when": { "q": "fonc", "includes": "fax" },         "tier": "voice",        "reason": "Service de télécopie" },
+    { "when": { "q": "comm", "includes": "presence" },    "tier": "voiceplus",    "reason": "Présence en temps réel des collègues" },
+    { "when": { "q": "fonc", "includes": "m365" },        "tier": "voiceplus",    "reason": "Intégration Microsoft 365 / Google Workspace" },
+    { "when": { "q": "comm", "includes": "rec" },         "tier": "enhanced",     "reason": "Enregistrement des appels" },
+    { "when": { "q": "comm", "includes": "rvi" },         "tier": "enhanced",     "reason": "Accueil automatisé (RVI à niveaux)" },
+    { "when": { "q": "comm", "includes": "video" },       "tier": "complete",     "reason": "Vidéoconférence (Business Connect Video)" },
+    { "when": { "q": "comm", "includes": "audioconf" },   "tier": "complete",     "reason": "Conférences audio illimitées" },
+    { "when": { "q": "fonc", "includes": "crm" },         "tier": "complete",     "reason": "Intégration CRM (Salesforce, Zendesk, etc.)" },
+    { "when": { "q": "fonc", "includes": "collab" },      "tier": "complete",     "reason": "Collaboration d'équipe avancée" },
+    { "when": { "q": "fonc", "includes": "analytics" },   "tier": "complete",     "reason": "Rapports d'utilisation et analytics" },
+    { "when": { "q": "comm", "includes": "supervision" }, "tier": "completeplus", "reason": "Supervision et coaching des appels" },
+    { "when": { "q": "fonc", "includes": "multisite" },   "tier": "completeplus", "reason": "Gestion multisite" },
+    { "when": { "q": "fonc", "includes": "compliance" },  "tier": "completeplus", "reason": "Archivage et conformité" },
+    { "when": { "q": "fonc", "includes": "api" },         "tier": "completeplus", "reason": "Accès API pour intégrations sur mesure" }
   ],
 
   /* --------------------------------------------------------------------------
      NOTES POUR LA VENTE (rapport de qualification)
-     Les {qXX} sont remplacés par la réponse correspondante.
+     Les {id} sont remplacés par la réponse correspondante;
+     {lignes.pub} = champ "pub" de la question à compteurs "lignes".
      -------------------------------------------------------------------------- */
   "salesNoteRules": [
-    { "when": { "q": "q9",  "equals": "oui" },              "note": "⚠️ Système d'alarme relié à la ligne fixe — prévoir une solution alternative (ligne numérique/cellulaire) avant la migration." },
-    { "when": { "q": "q6",  "equals": "oui" },              "note": "Engagement en cours jusqu'au {q6a} — coût mensuel actuel : {q6b}. Vérifier les frais de résiliation et planifier la transition." },
-    { "when": { "q": "q2a", "equals": "porter" },           "note": "Portabilité du numéro sans frais à planifier." },
-    { "when": { "q": "q2a", "equals": "nouveau" },          "note": "Nouveau numéro sans frais à commander." },
-    { "when": { "q": "q3",  "equals": "oui" },              "note": "Numéros supplémentaires à porter — voir la liste dans les réponses." },
-    { "when": { "q": "q12", "equals": "oui" },              "note": "SMS d'affaires requis sur le numéro d'entreprise." },
-    { "when": { "q": "q15", "equals": "oui" },              "note": "File d'attente d'appels à configurer (call queues) — valider la distribution des appels avec le client." },
-    { "when": { "q": "q16", "equals": "oui" },              "note": "Transfert interne direct requis — prévoir des combinés avec touches de postes (BLF)." },
-    { "when": { "q": "q17a", "equals": "analogique" },      "note": "Fax analogique — ajouter un adaptateur ATA." },
-    { "when": { "q": "q18", "equals": "oui" },              "note": "Intercom / annonce interne — prévoir un ATA ou adaptateur compatible." },
-    { "when": { "q": "q20", "equals": "non" },              "note": "Pas de prises Ethernet aux postes — recommander des combinés WiFi ou DECT sans fil (ex. Yealink W76P)." },
-    { "when": { "q": "q26", "equals": "oui" },              "note": "IVR : {q26a} branche(s)/menu(s) à concevoir." },
-    { "when": { "q": "q27", "equals": "oui" },              "note": "Déploiement multi-site : {q27a} emplacement(s)." },
-    { "when": { "q": "q29a", "equals": "oui" },             "note": "Intégrations critiques pour le client — niveau Complete minimum (Complete Plus si API sur mesure); valider la compatibilité avant la proposition." },
-    { "when": { "q": "q33", "equals": "oui" },              "note": "Call delegation : {q33a} assistante(s) exécutive(s) à configurer." },
-    { "when": { "q": "q8",  "equals": "moins50" },          "note": "Internet actuel < 50 Mbps — valider la bande passante disponible pour garantir la qualité des appels." },
-    { "when": { "q": "q8",  "equals": "nsp" },              "note": "Vitesse Internet inconnue — valider la bande passante disponible pour garantir la qualité des appels." }
+    { "when": { "q": "lignes", "field": "pub", "gt": 0 },       "note": "⚠️ {lignes.pub} ligne(s) publique(s) (alarme incendie / sécurité / ascenseur) — prévoir une solution dédiée (ligne numérique ou cellulaire)." },
+    { "when": { "q": "lignes", "field": "ext", "gt": 0 },       "note": "{lignes.ext} extension(s) simple(s) (sans boîte vocale ni mise en garde) — valider la tarification réduite." },
+    { "when": { "q": "sit_engagement", "equals": "oui" },       "note": "Engagement en cours jusqu'au {sit_eng_fin} — coût mensuel actuel : {sit_eng_cout}. Vérifier les frais de résiliation et planifier la transition." },
+    { "when": { "q": "num_sansfrais", "equals": "porter" },     "note": "Numéro sans frais à porter." },
+    { "when": { "q": "num_sansfrais", "equals": "nouveau" },    "note": "Nouveau numéro sans frais à commander." },
+    { "when": { "q": "num_autres", "includes": "porter" },      "note": "Numéros supplémentaires à porter — voir la liste dans les réponses." },
+    { "when": { "q": "num_autres", "includes": "nouveaux" },    "note": "{num_autres_nb} nouveau(x) numéro(s) à commander." },
+    { "when": { "q": "comm", "includes": "sms" },               "note": "SMS d'affaires requis sur le numéro d'entreprise." },
+    { "when": { "q": "comm", "includes": "queue" },             "note": "File d'attente d'appels à configurer (call queues) — valider la distribution des appels avec le client." },
+    { "when": { "q": "comm", "includes": "rvi" },               "note": "Accueil automatisé (RVI) : {comm_rvi_nb} menu(s)/choix à concevoir." },
+    { "when": { "q": "fonc", "includes": "crm" },               "note": "CRM à intégrer : {fonc_crm} — valider la compatibilité (Complete minimum)." },
+    { "when": { "q": "fonc", "includes": "multisite" },         "note": "Déploiement multisite : {fonc_sites_nb} emplacement(s)." },
+    { "when": { "q": "fonc", "includes": "annonce" },           "note": "Annonce interne / interphone — prévoir un ATA ou un adaptateur compatible." },
+    { "when": { "q": "fax_type", "includes": "traditionnel" },  "note": "Télécopieur traditionnel — prévoir des lignes supplémentaires et un adaptateur ATA." },
+    { "when": { "q": "tels", "includes": "existants" },         "note": "Appareils existants à réutiliser : {tels_existants} — vérifier la compatibilité avec Business Connect." },
+    { "when": { "q": "sit_internet", "equals": "moins50" },     "note": "Internet actuel < 50 Mbps — valider la bande passante disponible pour garantir la qualité des appels." },
+    { "when": { "q": "sit_internet", "equals": "nsp" },         "note": "Vitesse Internet inconnue — valider la bande passante disponible pour garantir la qualité des appels." }
   ],
 
   /* --------------------------------------------------------------------------
      ÉQUIPEMENTS À PRÉVOIR (rapport de qualification)
      -------------------------------------------------------------------------- */
   "equipmentRules": [
-    { "when": { "q": "q11", "includes": "combines" },  "item": "{q11a} combiné(s) IP de bureau" },
-    { "when": { "q": "q20", "equals": "non" },         "item": "Combinés sans fil WiFi/DECT recommandés (ex. Yealink W76P)" },
-    { "when": { "q": "q19", "equals": "oui" },         "item": "Combinés avec haut-parleur mains libres" },
-    { "when": { "q": "q16", "equals": "oui" },         "item": "Combinés avec touches de postes (BLF) pour transfert direct" },
-    { "when": { "q": "q17a", "equals": "analogique" }, "item": "1 adaptateur ATA (fax analogique)" },
-    { "when": { "q": "q18", "equals": "oui" },         "item": "1 adaptateur ATA (intercom / annonce interne)" },
-    { "when": { "q": "q21", "equals": "oui" },         "item": "Téléphone de conférence pour salle de réunion" }
+    { "when": { "q": "tels", "includes": "bureau" },           "item": "Téléphones de bureau IP — quantité à valider selon les lignes ({lignes.ind} individuelle(s) + {lignes.part} partagée(s))" },
+    { "when": { "q": "tels", "includes": "sansfil" },          "item": "Téléphones sans fil WiFi/DECT (ex. Yealink W76P)" },
+    { "when": { "q": "tels", "includes": "receptionniste" },   "item": "Téléphone(s) de réceptionniste avec touches de postes (BLF)" },
+    { "when": { "q": "tels", "includes": "conference" },       "item": "Téléphone(s) de conférence pour salle de réunion" },
+    { "when": { "q": "fax_type", "includes": "traditionnel" }, "item": "Adaptateur ATA pour télécopieur traditionnel (+ lignes supplémentaires)" },
+    { "when": { "q": "fonc", "includes": "annonce" },          "item": "ATA/adaptateur pour annonce interne et interphone" }
   ]
 };

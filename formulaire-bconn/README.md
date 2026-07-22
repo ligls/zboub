@@ -1,25 +1,37 @@
 # Formulaire de qualification — TELUS Business Connect (BConn)
 
-Formulaire web interactif multi-étapes que vous envoyez à vos clients pour qualifier
-leurs besoins en téléphonie VoIP. À la fin, le client (ou vous) télécharge un
-**rapport de qualification complet** (PDF, JSON ou texte) : c'est votre dossier client
-pour bâtir la proposition TELUS avec les prix.
+Formulaire web interactif (7 étapes, style questionnaire TELUS officiel : cartes
+cliquables et compteurs) que vous envoyez à vos clients pour qualifier leurs besoins
+en téléphonie VoIP. À la fin, le client télécharge un **rapport de qualification
+complet** (PDF, JSON ou texte). Vous chargez ensuite ce rapport dans **votre outil
+conseiller** (`rapport.html`) pour obtenir un tableau de bord structuré.
 
 ## Contenu du dossier
 
-| Fichier      | Rôle |
-|--------------|------|
-| `index.html` | Le formulaire (moteur d'affichage). **Vous n'avez jamais besoin d'y toucher.** |
-| `config.js`  | **Toutes les données** : questions, logique conditionnelle, règles de recommandation, notes de vente, équipements, prix. C'est le seul fichier à modifier. |
-| `README.md`  | Ce guide. |
+| Fichier        | Rôle |
+|----------------|------|
+| `index.html`   | Le formulaire client (moteur d'affichage). **Vous n'avez jamais besoin d'y toucher.** |
+| `config.js`    | **Toutes les données** : questions, logique conditionnelle, règles de recommandation, notes de vente, équipements, prix. C'est le seul fichier à modifier. |
+| `rapport.html` | **Votre outil conseiller** : glissez-y le fichier JSON exporté par le client → tableau de bord complet (recommandation, licences, checklist de notes et d'équipements, toutes les réponses), imprimable. |
+| `README.md`    | Ce guide. |
 
-## Démarrage rapide
+## Flux de travail
 
-Aucun serveur requis : double-cliquez sur `index.html` pour l'ouvrir dans un navigateur.
-Les deux fichiers (`index.html` et `config.js`) doivent rester **dans le même dossier**.
+1. Envoyez le lien du formulaire au client (Netlify) ou le fichier `index.html`.
+2. Le client répond (~4-6 minutes, brouillon sauvegardé automatiquement) puis
+   télécharge/vous envoie son rapport — ou il vous parvient par Formspree.
+3. Ouvrez `rapport.html`, déposez-y le fichier `.json` reçu : vous obtenez le
+   dossier client structuré avec cases à cocher pour préparer la proposition.
 
-Le brouillon du client est sauvegardé automatiquement dans son navigateur
-(localStorage) — il peut fermer la page et reprendre plus tard.
+## Les 7 étapes du formulaire
+
+1. **Numéros de téléphone** — numéro principal, sans frais (transfert/nouveau), autres numéros à porter ou à créer
+2. **Situation actuelle** — fournisseur, système, engagement (date + coût), services TELUS, vitesse Internet
+3. **Lignes** *(compteurs)* — lignes individuelles + partagées (= licences), **extensions simples** (poste sans boîte vocale ni mise en garde) et lignes publiques (alarme/ascenseur, déclenche l'avertissement)
+4. **Communication** *(cartes)* — RVI, file d'attente, enregistrement, vidéo, conférences audio, présence, SMS, supervision — ou « Sauter »
+5. **Fonctionnement** *(cartes)* — multisite, M365/Google, interphone, CRM, télécopie (numérique/traditionnelle), collaboration, analytics, conformité, API
+6. **Téléphones** *(cartes)* — bureau, sans fil, réceptionniste, conférence, applications seulement, appareils existants
+7. **Coordonnées**
 
 ## Modifier les questions (`config.js`)
 
@@ -30,45 +42,32 @@ sections → liste des étapes du formulaire
   └── questions → liste des questions de la section
 ```
 
-Chaque question ressemble à ceci :
-
-```js
-{
-  "id": "q13",                        // identifiant unique (ne pas dupliquer)
-  "type": "yesno",                    // type de question (voir tableau ci-dessous)
-  "required": true,                   // réponse obligatoire?
-  "label": "Avez-vous besoin de l'enregistrement des appels?",
-  "help": "Texte d'aide optionnel",   // optionnel
-  "placeholder": "Ex. : 250",         // optionnel (champs texte/nombre)
-  "showIf": { "q": "q6", "equals": "oui" }   // logique conditionnelle (optionnel)
-}
-```
-
 ### Types de questions disponibles
 
 | Type       | Affichage |
 |------------|-----------|
+| `cards`    | Cartes cliquables (style TELUS). `multi: true` = choix multiples; `"exclusive": "skip"` rend une carte exclusive (ex. « Sauter »). Chaque option : `label` (phrase), `tag` (nom de la fonctionnalité, souligné), `description`, `icon` (emoji). |
+| `counters` | Cartes à compteur −/+. Chaque item : `label`, `description`, `icon`, et `"licence": true` (compte dans les licences) ou `"extension": true` (compte dans les extensions). `requireMin` impose un minimum sur certains champs. |
 | `yesno`    | Boutons Oui / Non |
 | `radio`    | Choix unique (nécessite `options`) |
-| `checkbox` | Choix multiples (nécessite `options`; `"exclusive": "valeur"` rend une option exclusive, ex. « Aucun ») |
-| `select`   | Menu déroulant (nécessite `options`) |
+| `checkbox` | Choix multiples (nécessite `options`; `exclusive` possible) |
 | `text` / `tel` / `email` | Champ texte |
 | `number`   | Nombre (option `min`) |
 | `currency` | Montant en $ / mois |
 | `date`     | Sélecteur de date |
 | `textarea` | Texte multiligne |
-| `alert`    | Message d'information conditionnel (pas une question; `"style": "warning"` ou `"info"`, texte dans `text`) |
+| `alert`    | Message d'information conditionnel (`"style": "warning"` ou `"info"`, texte dans `text`) |
 
 ### Logique conditionnelle (`showIf`)
 
 Une question (ou une alerte) ne s'affiche que si sa condition est vraie :
 
 ```js
-"showIf": { "q": "q2", "equals": "oui" }                    // réponse exacte
-"showIf": { "q": "q11", "includes": "combines" }            // case cochée (checkbox)
-"showIf": { "q": "q11", "includesAny": ["a", "b"] }         // au moins une de ces cases
-"showIf": { "q": "q29", "includesOtherThan": "aucune" }     // autre chose que « aucune »
-"showIf": { "all": [ {...}, {...} ] }                       // toutes les conditions à la fois
+"showIf": { "q": "sit_engagement", "equals": "oui" }        // réponse exacte
+"showIf": { "q": "fonc", "includes": "fax" }                // carte/case sélectionnée
+"showIf": { "q": "tels", "includesAny": ["a", "b"] }        // au moins une
+"showIf": { "q": "lignes", "field": "pub", "gt": 0 }        // compteur > 0
+"showIf": { "all": [ {...}, {...} ] }                       // toutes à la fois
 ```
 
 Si la question parente est masquée, la sous-question l'est aussi automatiquement,
@@ -80,7 +79,7 @@ Chaque règle fixe un **niveau minimum de forfait** quand une condition est vrai
 Le niveau recommandé est le plus élevé de toutes les règles déclenchées :
 
 ```js
-{ "when": { "q": "q13", "equals": "oui" }, "tier": "enhanced",
+{ "when": { "q": "comm", "includes": "rec" }, "tier": "enhanced",
   "reason": "Enregistrement des appels" }
 ```
 
@@ -89,9 +88,10 @@ Les niveaux (`tiers`) sont ordonnés du plus bas au plus haut :
 
 ### Notes de vente et équipements
 
-- `salesNoteRules` : points clés ajoutés à la section « Notes pour la vente » du rapport.
+- `salesNoteRules` : points clés ajoutés à « Notes pour la proposition » du rapport.
 - `equipmentRules` : items ajoutés à « Équipements à prévoir ».
-- Dans les textes, `{q10}` est remplacé par la réponse à la question `q10`.
+- Dans les textes, `{fonc_crm}` est remplacé par la réponse, et `{lignes.pub}`
+  par le champ `pub` de la question à compteurs `lignes`.
 
 ### Prix (optionnel)
 
@@ -104,7 +104,7 @@ aucun prix (vous faites votre devis séparément).
 
 Dans `app`, mettez `"showRecommendationToClient": false` pour que l'écran final du
 client ne montre ni le niveau recommandé ni les notes de vente. Le rapport
-téléchargeable (PDF/JSON/texte) reste complet.
+téléchargeable et votre outil `rapport.html` restent complets.
 
 ## Recevoir les rapports par courriel (Formspree, gratuit)
 
@@ -114,25 +114,25 @@ téléchargeable (PDF/JSON/texte) reste complet.
    ```js
    "formspreeEndpoint": "https://formspree.io/f/abcdwxyz"
    ```
-4. À chaque soumission, le rapport complet (JSON) vous est envoyé automatiquement.
-   Si l'envoi échoue, le client est invité à télécharger le rapport et à vous
-   l'envoyer par courriel.
+4. À chaque soumission, le rapport complet (JSON) vous est envoyé automatiquement —
+   copiez-le dans `rapport.html` pour l'analyser. Si l'envoi échoue, le client est
+   invité à télécharger le rapport et à vous l'envoyer par courriel.
 
 ## Déployer sur Netlify (lien à envoyer aux clients)
 
 1. Allez sur [app.netlify.com/drop](https://app.netlify.com/drop).
-2. Glissez-déposez **le dossier complet** (`index.html` + `config.js`).
-3. Netlify vous donne un lien du type `https://votre-site.netlify.app` — c'est ce
-   lien que vous envoyez à vos clients.
+2. Glissez-déposez **le dossier complet** (`index.html` + `config.js` + `rapport.html`).
+3. Netlify vous donne un lien du type `https://votre-site.netlify.app` — envoyez-le
+   à vos clients. Votre outil conseiller sera à `…/rapport.html` (gardez ce lien
+   pour vous).
 4. Pour mettre à jour les questions : modifiez `config.js` et re-déposez le dossier.
 
-## Télécharger les rapports
+## Télécharger les rapports (côté client)
 
 À la fin du questionnaire, trois boutons :
 
-- **🖨️ Télécharger le rapport (PDF)** — ouvre l'impression du navigateur; choisissez
-  « Enregistrer au format PDF ». Le rapport imprimé contient : profil client,
-  recommandation avec justifications, notes pour la vente, équipements, et toutes
-  les réponses.
-- **⬇️ Exporter en JSON** — données structurées (utile pour vos outils).
-- **⬇️ Exporter en texte** — version texte simple à coller dans un courriel ou CRM.
+- **🖨️ Télécharger le rapport (PDF)** — impression du navigateur → « Enregistrer au
+  format PDF ». Contient profil, recommandation justifiée, notes, équipements et
+  toutes les réponses.
+- **⬇️ Exporter en JSON** — le fichier à charger dans `rapport.html`.
+- **⬇️ Exporter en texte** — version à coller dans un courriel ou CRM.

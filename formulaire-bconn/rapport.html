@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rapport de qualification — Outil conseiller BConn</title>
+<style>
+:root{
+  --violet:#4B286D;
+  --violet-pale:#EFEAF5;
+  --vert:#66CC00;
+  --vert-fonce:#4E9E00;
+  --vert-pale:#EAF7DC;
+  --gris-1:#F6F6F8;
+  --gris-2:#E3E3E8;
+  --gris-3:#8A8D91;
+  --encre:#2A2C2E;
+  --rouge:#C12335;
+  --ambre-pale:#FFF6DE;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:15px;line-height:1.5;color:var(--encre);background:var(--gris-1);
+}
+.topbar{background:var(--violet);color:#fff;padding:14px 20px}
+.topbar .inner{max-width:1060px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar h1{margin:0;font-size:1.1rem}
+.topbar h1 .accent{color:var(--vert)}
+.topbar .tools{display:flex;gap:10px}
+main{max-width:1060px;margin:0 auto;padding:24px 16px 64px}
+button{font:inherit;font-weight:600;border:none;border-radius:8px;padding:10px 20px;cursor:pointer}
+.btn-green{background:var(--vert);color:#1d3300}
+.btn-white{background:#fff;color:var(--violet)}
+.btn-ghost{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5)}
+
+/* ---------- Zone de chargement ---------- */
+#loader .card{background:#fff;border:1px solid var(--gris-2);border-radius:10px;padding:28px;max-width:720px;margin:24px auto}
+#loader h2{color:var(--violet);margin:0 0 6px}
+.dropzone{
+  border:2px dashed var(--gris-2);border-radius:10px;
+  padding:34px 20px;text-align:center;color:var(--gris-3);
+  margin:18px 0;cursor:pointer;transition:border-color .15s, background .15s;
+}
+.dropzone.over{border-color:var(--vert);background:var(--vert-pale)}
+.dropzone .big{font-size:2rem}
+textarea{
+  width:100%;min-height:130px;padding:10px 12px;font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:.82rem;border:1.5px solid var(--gris-2);border-radius:8px;resize:vertical;
+}
+textarea:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-pale)}
+.loader-actions{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
+.load-error{color:var(--rouge);font-size:.9rem;margin-top:10px;display:none}
+
+/* ---------- Tableau de bord ---------- */
+#dash{display:none}
+.client-bar{
+  background:#fff;border:1px solid var(--gris-2);border-radius:10px;
+  padding:18px 22px;display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin-bottom:16px;
+}
+.client-bar .who .name{font-size:1.25rem;font-weight:800;color:var(--violet)}
+.client-bar .who .company{font-size:.95rem;color:#555}
+.client-bar .meta{display:flex;gap:22px;flex-wrap:wrap;margin-left:auto}
+.client-bar .meta div{font-size:.85rem;color:#555}
+.client-bar .meta b{display:block;color:var(--encre);font-size:.95rem}
+.gen-date{font-size:.8rem;color:var(--gris-3);margin:0 0 14px}
+
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:16px}
+@media (max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--gris-2);border-radius:10px;padding:20px 22px;margin-bottom:16px}
+.panel h3{color:var(--violet);font-size:1rem;margin:0 0 12px;padding-bottom:6px;border-bottom:2px solid var(--violet-pale)}
+
+.reco{background:var(--violet);color:#fff;border-radius:10px;padding:20px 24px;margin-bottom:16px}
+.reco .eyebrow{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+.reco .tier{font-size:1.6rem;font-weight:800;color:var(--vert);margin:2px 0}
+.reco .desc{font-size:.88rem;opacity:.9}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--gris-2);border-radius:10px;padding:14px;text-align:center}
+.kpi .n{font-size:1.5rem;font-weight:800;color:var(--violet)}
+.kpi .t{font-size:.78rem;color:#555}
+
+ul.plain{margin:0;padding-left:20px}
+ul.plain li{margin:5px 0}
+ul.checklist{list-style:none;margin:0;padding:0}
+ul.checklist li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px dashed var(--gris-2)}
+ul.checklist li:last-child{border-bottom:none}
+ul.checklist input{accent-color:var(--vert-fonce);width:17px;height:17px;margin-top:3px;flex:none}
+ul.checklist li.done label{text-decoration:line-through;color:var(--gris-3)}
+ul.checklist label{cursor:pointer}
+.note-warn{background:var(--ambre-pale);border-radius:6px;padding:2px 6px}
+
+.answers-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.answers-table th{text-align:left;background:var(--violet-pale);color:var(--violet);padding:7px 10px}
+.answers-table td{padding:6px 10px;border-bottom:1px solid var(--gris-2);vertical-align:top}
+.answers-table td:first-child{width:55%;color:#555}
+
+/* ---------- Impression ---------- */
+@media print{
+  body{background:#fff;font-size:12px}
+  .topbar .tools,#loader{display:none!important}
+  .panel,.client-bar,.kpi{border-color:#bbb;break-inside:avoid}
+  .grid{grid-template-columns:1fr 1fr}
+  ul.checklist input{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="inner">
+    <h1>Outil conseiller — <span class="accent">Rapport de qualification BConn</span></h1>
+    <div class="tools">
+      <button class="btn-ghost" id="btnAutre" style="display:none">📂 Charger un autre rapport</button>
+      <button class="btn-green" id="btnImprimer" style="display:none">🖨️ Imprimer / PDF</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Chargement du rapport -->
+  <div id="loader">
+    <div class="card">
+      <h2>Charger un rapport client</h2>
+      <p>Déposez ici le fichier <b>.json</b> exporté par le client (ou reçu par Formspree), ou collez son contenu ci-dessous.</p>
+      <div class="dropzone" id="dropzone">
+        <div class="big">📂</div>
+        Glissez-déposez le fichier <b>qualification-bconn-*.json</b> ici<br>
+        <small>ou cliquez pour choisir un fichier</small>
+        <input type="file" id="fileInput" accept=".json,application/json" hidden>
+      </div>
+      <textarea id="jsonPaste" placeholder='Ou collez le contenu JSON ici… {"genereLe": "...", "client": {...}}'></textarea>
+      <div class="loader-actions">
+        <button class="btn-green" id="btnAnalyser">Analyser le rapport</button>
+        <span class="load-error" id="loadError"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau de bord -->
+  <div id="dash"></div>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $ = (s) => document.querySelector(s);
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------- Chargement ---------- */
+function fail(msg){
+  const e = $("#loadError");
+  e.textContent = msg; e.style.display = "inline";
+}
+
+function tryRender(text){
+  let data;
+  try{ data = JSON.parse(text); }
+  catch(err){ fail("JSON invalide — vérifiez que vous avez copié le fichier au complet."); return; }
+  if(!data || !data.client || !data.recommandation || !Array.isArray(data.reponses)){
+    fail("Ce fichier ne ressemble pas à un rapport de qualification BConn.");
+    return;
+  }
+  render(data);
+}
+
+$("#btnAnalyser").addEventListener("click", () => {
+  $("#loadError").style.display = "none";
+  const t = $("#jsonPaste").value.trim();
+  if(!t){ fail("Collez le contenu JSON ou choisissez un fichier."); return; }
+  tryRender(t);
+});
+
+const dz = $("#dropzone");
+dz.addEventListener("click", () => $("#fileInput").click());
+$("#fileInput").addEventListener("change", (e) => { if(e.target.files[0]) readFile(e.target.files[0]); });
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("over"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+dz.addEventListener("drop", (e) => {
+  e.preventDefault(); dz.classList.remove("over");
+  if(e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+});
+function readFile(f){
+  $("#loadError").style.display = "none";
+  const r = new FileReader();
+  r.onload = () => tryRender(r.result);
+  r.readAsText(f, "utf-8");
+}
+
+$("#btnImprimer").addEventListener("click", () => window.print());
+$("#btnAutre").addEventListener("click", () => {
+  $("#dash").style.display = "none"; $("#dash").innerHTML = "";
+  $("#loader").style.display = "block";
+  $("#btnImprimer").style.display = "none"; $("#btnAutre").style.display = "none";
+  $("#jsonPaste").value = ""; $("#fileInput").value = "";
+});
+
+/* ---------- Rendu du tableau de bord ---------- */
+function checklist(items, warnPrefix){
+  if(!items || !items.length) return "<p>—</p>";
+  return '<ul class="checklist">'+items.map((x,i) => {
+    const warn = warnPrefix && String(x).startsWith(warnPrefix);
+    return '<li><input type="checkbox" id="ck'+Math.random().toString(36).slice(2)+'">'
+         + "<label"+(warn?' class="note-warn"':"")+">"+escapeHtml(x)+"</label></li>";
+  }).join("")+"</ul>";
+}
+
+function render(data){
+  const c = data.client, r = data.recommandation, k = data.kpis || {};
+  const genere = data.genereLe ? new Date(data.genereLe).toLocaleString("fr-CA", {dateStyle:"long", timeStyle:"short"}) : "—";
+
+  const kpis = [
+    {n: r.licences ?? "—",   t: "Licences BConn"},
+    {n: r.extensions ?? 0,   t: "Extensions simples"},
+    {n: k.lignesPubliques ?? 0, t: "Lignes publiques"},
+    {n: k.emplacements ?? 1, t: "Emplacement(s)"},
+    {n: k.coutMensuelActuel != null ? k.coutMensuelActuel + " $" : "—", t: "Coût mensuel actuel"}
+  ];
+
+  // regrouper les réponses par section
+  const bySection = [];
+  for(const rep of data.reponses){
+    let g = bySection[bySection.length-1];
+    if(!g || g.section !== rep.section){ g = {section: rep.section, rows: []}; bySection.push(g); }
+    g.rows.push(rep);
+  }
+
+  let html = "";
+  html += '<div class="client-bar">'
+       +  '<div class="who"><div class="name">'+escapeHtml(c.nom || "—")+'</div><div class="company">'+escapeHtml(c.entreprise || "—")+"</div></div>"
+       +  '<div class="meta">'
+       +  "<div>Courriel<b>"+escapeHtml(c.courriel || "—")+"</b></div>"
+       +  "<div>Téléphone<b>"+escapeHtml(c.telephone || "—")+"</b></div>"
+       +  "<div>Suivi souhaité<b>"+escapeHtml(c.meilleurMoment || "—")+"</b></div>"
+       +  "</div></div>";
+  html += '<p class="gen-date">Rapport généré le '+escapeHtml(genere)+"</p>";
+
+  html += '<div class="reco"><div class="eyebrow">Niveau de forfait minimum requis</div>'
+       +  '<div class="tier">'+escapeHtml(r.niveauMinimum || "—")+"</div>"
+       +  '<div class="desc">'+escapeHtml(r.description || "")+"</div></div>";
+
+  html += '<div class="kpis">'+kpis.map(x => '<div class="kpi"><div class="n">'+escapeHtml(String(x.n))+'</div><div class="t">'+escapeHtml(x.t)+"</div></div>").join("")+"</div>";
+
+  if(data.estimation){
+    html += '<div class="panel"><h3>💰 Estimation budgétaire</h3><p><b>'
+         +  Number(data.estimation.total).toFixed(2)+" $ / mois</b> ("
+         +  escapeHtml(String(r.licences))+" × "+Number(data.estimation.perLicence).toFixed(2)+" "
+         +  escapeHtml(data.estimation.currencyLabel || "")+")</p></div>";
+  }
+
+  html += '<div class="grid"><div>';
+  html += '<div class="panel"><h3>🎯 Pourquoi ce niveau?</h3>'
+       +  (r.justifications && r.justifications.length
+            ? '<ul class="plain">'+r.justifications.map(j => "<li>"+escapeHtml(j)+"</li>").join("")+"</ul>"
+            : "<p>Aucune contrainte particulière — le niveau de base suffit.</p>")
+       +  "</div>";
+  html += '<div class="panel"><h3>📋 Notes pour la proposition</h3>'+checklist(data.notesVente, "⚠️")+"</div>";
+  html += "</div><div>";
+  html += '<div class="panel"><h3>🔧 Équipements à prévoir</h3>'+checklist(data.equipements)+"</div>";
+  html += "</div></div>";
+
+  html += '<div class="panel"><h3>🗒️ Réponses complètes</h3>';
+  for(const g of bySection){
+    html += '<table class="answers-table"><tr><th colspan="2">'+escapeHtml(g.section)+"</th></tr>";
+    for(const row of g.rows){
+      html += "<tr><td>"+escapeHtml(row.question)+"</td><td><b>"+escapeHtml(row.reponse)+"</b></td></tr>";
+    }
+    html += "</table><br>";
+  }
+  html += "</div>";
+
+  $("#dash").innerHTML = html;
+  $("#loader").style.display = "none";
+  $("#dash").style.display = "block";
+  $("#btnImprimer").style.display = "inline-block";
+  $("#btnAutre").style.display = "inline-block";
+
+  // cocher = barrer
+  $("#dash").addEventListener("change", (e) => {
+    if(e.target.matches('ul.checklist input[type=checkbox]')){
+      e.target.closest("li").classList.toggle("done", e.target.checked);
+    }
+  });
+}
+})();
+</script>
+</body>
+</html>
