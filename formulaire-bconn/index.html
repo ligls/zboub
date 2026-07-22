@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Questionnaire — TELUS Business Connect</title>
+<style>
+/* ===================== MARQUE TELUS ===================== */
+:root{
+  --violet:#4B286D;
+  --violet-fonce:#3A1F54;
+  --violet-pale:#EFEAF5;
+  --vert:#66CC00;
+  --vert-fonce:#4E9E00;
+  --vert-pale:#EAF7DC;
+  --gris-1:#F6F6F8;
+  --gris-2:#E3E3E8;
+  --gris-3:#8A8D91;
+  --encre:#2A2C2E;
+  --rouge:#C12335;
+  --ambre:#8a6d1c;
+  --ambre-pale:#FFF6DE;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  color:var(--encre);
+  background:#fff;
+}
+.topbar{background:var(--violet);color:#fff;padding:16px 20px}
+.topbar .inner{max-width:1020px;margin:0 auto}
+.topbar h1{margin:0;font-size:1.2rem;letter-spacing:.2px}
+.topbar h1 .accent{color:var(--vert)}
+.topbar p{margin:3px 0 0;font-size:.85rem;opacity:.85}
+main{max-width:1020px;margin:0 auto;padding:28px 20px 64px}
+
+h2{color:var(--violet);margin:4px 0 4px;font-size:1.55rem;font-weight:600}
+.step-eyebrow{font-size:.85rem;font-weight:700;color:var(--encre)}
+.step-help{color:#555;margin:0 0 20px;font-size:.95rem}
+
+/* ---------- Barre de progression ---------- */
+.progress-track{height:6px;background:var(--gris-2);border-radius:99px;overflow:hidden;margin:14px 0 26px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--violet),var(--vert));border-radius:99px;transition:width .35s ease;width:0}
+
+/* ---------- Questions classiques ---------- */
+.question{margin:24px 0}
+.question.indent{margin-left:6px;padding-left:16px;border-left:3px solid var(--violet-pale)}
+.q-label{display:block;font-weight:600;margin-bottom:10px}
+.q-label .req{color:var(--rouge)}
+.q-help{font-size:.85rem;color:var(--gris-3);margin:-6px 0 10px}
+input[type=text],input[type=tel],input[type=email],input[type=number],
+input[type=date],textarea,select{
+  width:100%;max-width:420px;
+  padding:10px 12px;font:inherit;color:inherit;
+  border:1.5px solid var(--gris-2);border-radius:8px;background:#fff;
+}
+textarea{min-height:90px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--violet);box-shadow:0 0 0 3px var(--violet-pale)}
+.currency-wrap{display:flex;align-items:center;gap:8px;max-width:420px}
+.currency-wrap input{flex:1}
+.currency-wrap .unit{color:var(--gris-3);white-space:nowrap;font-size:.9rem}
+
+/* pilules radio/checkbox */
+.choices{display:flex;flex-wrap:wrap;gap:10px}
+.choice{
+  display:flex;align-items:center;gap:10px;
+  border:1.5px solid var(--gris-2);border-radius:8px;
+  padding:10px 14px;cursor:pointer;background:#fff;
+  transition:border-color .15s, background .15s;user-select:none;
+}
+.choice:hover{border-color:var(--violet)}
+.choice input{accent-color:var(--violet);width:18px;height:18px;margin:0;flex:none}
+.choice.checked{border-color:var(--violet);background:var(--violet-pale)}
+
+/* ---------- Cartes sélectionnables (style TELUS) ---------- */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.sel-card{
+  position:relative;
+  border:1px solid #c9c9cf;border-radius:6px;
+  background:#fff;padding:18px 16px 16px;
+  cursor:pointer;user-select:none;
+  transition:border-color .15s, box-shadow .15s;
+  min-height:96px;
+}
+.sel-card:hover{border-color:var(--violet)}
+.sel-card.selected{border:2px solid var(--violet);padding:17px 15px 15px}
+.sel-card .check{
+  display:none;position:absolute;top:-11px;right:-11px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--violet);color:#fff;
+  font-size:15px;line-height:26px;text-align:center;font-weight:700;
+  box-shadow:0 0 0 3px #fff;
+}
+.sel-card.selected .check{display:block}
+.sel-card .c-icon{font-size:1.9rem;line-height:1;margin-bottom:10px}
+.sel-card .c-label{font-weight:700;font-size:.95rem;margin-bottom:6px}
+.sel-card .c-desc{font-size:.85rem;color:#555}
+.sel-card .c-tag{
+  display:inline-block;margin-top:10px;font-size:.82rem;
+  color:var(--violet);text-decoration:underline;font-weight:600;
+}
+.sel-card .c-tag::before{content:"✓ ";text-decoration:none}
+
+/* ---------- Cartes à compteur ---------- */
+.counter-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.counter-card{
+  position:relative;border:1px solid #c9c9cf;border-radius:6px;
+  background:#fff;padding:20px 16px;text-align:center;
+  transition:border-color .15s;
+}
+.counter-card.active{border:2px solid var(--violet);padding:19px 15px}
+.counter-card .check{
+  display:none;position:absolute;top:-11px;right:-11px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--violet);color:#fff;font-size:15px;line-height:26px;
+  text-align:center;font-weight:700;box-shadow:0 0 0 3px #fff;
+}
+.counter-card.active .check{display:block}
+.counter-card .c-icon{font-size:2.3rem;line-height:1;margin-bottom:10px}
+.counter-card .c-label{font-weight:700;font-size:.95rem;margin-bottom:6px}
+.counter-card .c-desc{font-size:.85rem;color:#555;min-height:56px}
+.stepper{display:inline-flex;align-items:stretch;margin-top:12px;border:1px solid #c9c9cf;border-radius:6px;overflow:hidden}
+.stepper button{
+  width:44px;border:none;background:#fff;color:var(--encre);
+  font-size:1.2rem;font-weight:600;cursor:pointer;padding:8px 0;
+}
+.stepper button:hover{background:var(--violet-pale)}
+.stepper .val{
+  width:56px;display:flex;align-items:center;justify-content:center;
+  border-left:1px solid #c9c9cf;border-right:1px solid #c9c9cf;
+  font-weight:700;
+}
+
+/* alertes conditionnelles */
+.alert{border-radius:8px;padding:12px 14px;font-size:.92rem;margin:16px 0}
+.alert.warning{background:var(--ambre-pale);color:var(--ambre);border:1px solid #eadfae}
+.alert.info{background:var(--vert-pale);color:var(--vert-fonce);border:1px solid #cfe9b0}
+
+/* erreurs */
+.question.has-error input,.question.has-error textarea,.question.has-error select{border-color:var(--rouge)}
+.question.has-error .choice,.question.has-error .sel-card,.question.has-error .counter-card{border-color:var(--rouge)}
+.error-msg{color:var(--rouge);font-size:.85rem;margin-top:8px;display:none}
+.question.has-error .error-msg{display:block}
+
+/* ---------- Navigation ---------- */
+.nav{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:36px}
+button{font:inherit;font-weight:600;border:none;cursor:pointer;transition:filter .15s}
+button:hover{filter:brightness(1.05)}
+.btn-primary{background:var(--violet);color:#fff;border-radius:99px;padding:12px 34px}
+.btn-green{background:var(--vert);color:#1d3300;border-radius:99px;padding:12px 34px}
+.btn-secondary{background:#fff;color:var(--violet);border:1.5px solid var(--violet);border-radius:99px;padding:12px 30px}
+.btn-ghost{background:transparent;color:var(--gris-3);border:1.5px solid var(--gris-2);border-radius:99px;padding:12px 26px}
+.btn-link{background:none;color:var(--vert-fonce);padding:12px 6px}
+.btn-link::before{content:"← "}
+
+/* ---------- Écran d'intro ---------- */
+.intro-hero{text-align:center;padding:36px 0 20px;max-width:640px;margin:0 auto}
+.intro-hero .badge{
+  display:inline-block;background:var(--vert-pale);color:var(--vert-fonce);
+  font-size:.8rem;font-weight:700;padding:4px 12px;border-radius:99px;margin-bottom:14px
+}
+.intro-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+
+/* ---------- Résultats ---------- */
+.reco-card{background:var(--violet);color:#fff;border-radius:var(--radius);padding:24px 28px;margin:0 0 22px}
+.reco-card .eyebrow{font-size:.8rem;text-transform:uppercase;letter-spacing:1px;opacity:.8}
+.reco-card .tier{font-size:1.7rem;font-weight:800;color:var(--vert);margin:4px 0}
+.reco-card .desc{font-size:.92rem;opacity:.9}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 22px}
+.kpi{border:1px solid var(--gris-2);border-radius:8px;padding:14px;text-align:center;background:var(--gris-1)}
+.kpi .n{font-size:1.6rem;font-weight:800;color:var(--violet)}
+.kpi .t{font-size:.82rem;color:#555}
+.result-block{margin:22px 0}
+.result-block h3{color:var(--violet);font-size:1.05rem;margin:0 0 10px;padding-bottom:6px;border-bottom:2px solid var(--violet-pale)}
+.result-block ul{margin:0;padding-left:22px}
+.result-block li{margin:5px 0}
+.answers-table{width:100%;border-collapse:collapse;font-size:.92rem}
+.answers-table th{text-align:left;background:var(--violet-pale);color:var(--violet);padding:8px 10px;font-size:.95rem}
+.answers-table td{padding:7px 10px;border-bottom:1px solid var(--gris-2);vertical-align:top}
+.answers-table td:first-child{width:55%;color:#555}
+.dl-actions{display:flex;gap:12px;flex-wrap:wrap;margin:26px 0 6px}
+.send-status{font-size:.9rem;margin-top:10px}
+.send-status.ok{color:var(--vert-fonce)}
+.send-status.err{color:var(--rouge)}
+
+footer{text-align:center;color:var(--gris-3);font-size:.8rem;padding:20px;max-width:1020px;margin:0 auto}
+
+/* ---------- Rapport imprimable ---------- */
+#printReport{display:none}
+@media print{
+  body{background:#fff}
+  .topbar,main,footer{display:none!important}
+  #printReport{display:block;font-size:12px;color:#000;padding:0 8px}
+  #printReport h1{color:var(--violet);font-size:18px;margin:0 0 2px}
+  #printReport .sub{color:#555;font-size:11px;margin:0 0 14px}
+  #printReport h2{color:var(--violet);font-size:14px;border-bottom:1.5px solid var(--violet);padding-bottom:3px;margin:16px 0 8px}
+  #printReport table{width:100%;border-collapse:collapse}
+  #printReport td,#printReport th{border:1px solid #ccc;padding:4px 6px;text-align:left;vertical-align:top}
+  #printReport th{background:#EFEAF5}
+  #printReport ul{margin:4px 0;padding-left:18px}
+  #printReport .reco{background:#EFEAF5;border:1.5px solid var(--violet);border-radius:6px;padding:10px 12px;margin:8px 0}
+  #printReport .reco b{color:var(--violet);font-size:14px}
+}
+
+@media (max-width:560px){
+  .card-grid,.counter-grid{grid-template-columns:1fr}
+  .choices{flex-direction:column;align-items:stretch}
+  .nav{flex-direction:column-reverse;gap:12px}
+  .nav button{width:100%}
+  .dl-actions button{width:100%}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="inner">
+    <h1 id="appTitle">TELUS <span class="accent">Business Connect</span></h1>
+    <p id="appSubtitle"></p>
+  </div>
+</header>
+
+<main>
+  <!-- Écran d'accueil -->
+  <div id="intro">
+    <div class="intro-hero">
+      <span class="badge">4 à 6 minutes</span>
+      <h2>Aidez-nous à préparer votre solution téléphonique</h2>
+      <p id="introText"></p>
+      <div class="intro-actions">
+        <button class="btn-primary" id="btnStart">Commencer le questionnaire</button>
+        <button class="btn-secondary" id="btnResume" hidden>Reprendre où j'étais</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assistant multi-étapes -->
+  <div id="wizard" hidden>
+    <div class="step-eyebrow" id="progressStep"></div>
+    <h2 id="sectionTitle"></h2>
+    <p class="step-help" id="sectionHelp"></p>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <form id="questions" novalidate autocomplete="off"></form>
+    <div class="nav">
+      <button type="button" class="btn-link" id="btnPrev">Précédent</button>
+      <button type="button" class="btn-primary" id="btnNext">Suivant</button>
+    </div>
+  </div>
+
+  <!-- Écran de résultats -->
+  <div id="result" hidden>
+    <h2>✅ Questionnaire complété — merci!</h2>
+    <p>Voici le résumé de vos besoins. Téléchargez votre rapport et transmettez-le à votre conseiller TELUS.</p>
+    <div id="resultBody"></div>
+    <div class="dl-actions">
+      <button class="btn-green" id="btnPrint">🖨️ Télécharger le rapport (PDF)</button>
+      <button class="btn-secondary" id="btnJson">⬇️ Exporter en JSON</button>
+      <button class="btn-secondary" id="btnTxt">⬇️ Exporter en texte</button>
+      <button class="btn-ghost" id="btnRestart">↺ Recommencer</button>
+    </div>
+    <div class="send-status" id="sendStatus"></div>
+  </div>
+</main>
+
+<footer>Questionnaire de qualification TELUS Business Connect — vos réponses restent dans votre navigateur tant que vous ne les transmettez pas.</footer>
+
+<!-- Rapport imprimable (rempli à la soumission) -->
+<div id="printReport"></div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+"use strict";
+const CONFIG = window.BCONN_CONFIG;
+const STORAGE_KEY = "bconn-qualification-draft";
+
+let answers = {};
+let step = 0; // index de section
+
+const $ = (sel) => document.querySelector(sel);
+const sections = CONFIG.sections;
+
+/* ======================= Conditions ======================= */
+function evalCond(cond, ans){
+  if(!cond) return true;
+  if(Array.isArray(cond.all)) return cond.all.every(c => evalCond(c, ans));
+  let v = ans[cond.q];
+  if(cond.field !== undefined) v = (v && typeof v === "object") ? v[cond.field] : undefined;
+  if("equals" in cond)   return v === cond.equals;
+  if("notEquals" in cond) return v !== undefined && v !== cond.notEquals;
+  if("anyOf" in cond)    return cond.anyOf.includes(v);
+  if("includes" in cond) return Array.isArray(v) && v.includes(cond.includes);
+  if("includesAny" in cond) return Array.isArray(v) && cond.includesAny.some(x => v.includes(x));
+  if("includesOtherThan" in cond) return Array.isArray(v) && v.some(x => x !== cond.includesOtherThan);
+  if("gt" in cond)       return Number(v || 0) > cond.gt;
+  if("notEmpty" in cond) return v !== undefined && v !== null && String(v).trim() !== "";
+  return false;
+}
+
+/* Retourne l'ensemble des ids de questions visibles (chaîne de dépendances
+   respectée : une sous-question d'une question cachée est cachée). */
+function visibleIds(ans){
+  const vis = new Set();
+  for(const sec of sections){
+    for(const q of sec.questions){
+      if(!q.showIf){ vis.add(q.id); continue; }
+      const deps = q.showIf.all ? q.showIf.all : [q.showIf];
+      const parentsVisible = deps.every(d => !d.q || vis.has(d.q));
+      if(parentsVisible && evalCond(q.showIf, ans)) vis.add(q.id);
+    }
+  }
+  return vis;
+}
+
+function effectiveAnswers(){
+  const vis = visibleIds(answers);
+  const eff = {};
+  for(const id of vis){ if(answers[id] !== undefined) eff[id] = answers[id]; }
+  return eff;
+}
+
+/* ======================= Aides ======================= */
+const YESNO = [{value:"oui",label:"Oui"},{value:"non",label:"Non"}];
+
+function questionById(id){
+  for(const sec of sections){
+    for(const q of sec.questions){ if(q.id === id) return q; }
+  }
+  return null;
+}
+
+function optionLabel(q, value){
+  const opts = q.type === "yesno" ? YESNO : (q.options || []);
+  const o = opts.find(o => o.value === value);
+  return o ? (o.tag || o.label) : value;
+}
+
+function formatAnswer(q, v){
+  if(v === undefined || v === null || v === "") return "—";
+  if(q.type === "counters"){
+    const parts = [];
+    for(const it of q.items){
+      const n = Number((v || {})[it.value] || 0);
+      if(n > 0) parts.push(it.label + " : " + n);
+    }
+    return parts.length ? parts.join(" · ") : "Aucune";
+  }
+  if(Array.isArray(v)) return v.map(x => optionLabel(q, x)).join(", ") || "—";
+  if(["yesno","radio","select","cards"].includes(q.type)) return optionLabel(q, v);
+  if(q.type === "currency") return v + " $ / mois";
+  if(q.type === "date"){
+    const d = new Date(v + "T00:00:00");
+    return isNaN(d) ? v : d.toLocaleDateString("fr-CA", {year:"numeric",month:"long",day:"numeric"});
+  }
+  return String(v);
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ======================= Rendu des questions ======================= */
+function renderQuestion(q){
+  const wrap = document.createElement("div");
+  wrap.dataset.qid = q.id;
+
+  if(q.type === "alert"){
+    wrap.className = "alert " + (q.style || "info");
+    wrap.innerHTML = (q.style === "warning" ? "⚠️ " : "ℹ️ ") + escapeHtml(q.text);
+    return wrap;
+  }
+
+  wrap.className = "question" + (q.showIf ? " indent" : "");
+  const req = q.required ? ' <span class="req">*</span>' : "";
+  let html = '<label class="q-label" for="f_'+q.id+'">'+escapeHtml(q.label)+req+"</label>";
+  if(q.help) html += '<div class="q-help">'+escapeHtml(q.help)+"</div>";
+
+  const v = answers[q.id];
+
+  if(q.type === "cards"){
+    const selected = q.multi ? (Array.isArray(v) ? v : []) : v;
+    html += '<div class="card-grid">';
+    for(const o of q.options){
+      const isSel = q.multi ? selected.includes(o.value) : selected === o.value;
+      html += '<div class="sel-card'+(isSel?' selected':'')+'" role="'+(q.multi?'checkbox':'radio')+'" aria-checked="'+isSel+'" tabindex="0" data-card-q="'+q.id+'" data-card-v="'+escapeHtml(o.value)+'">'
+           +  '<span class="check">✓</span>'
+           +  (o.icon ? '<div class="c-icon">'+o.icon+"</div>" : "")
+           +  '<div class="c-label">'+escapeHtml(o.label)+"</div>"
+           +  (o.description ? '<div class="c-desc">'+escapeHtml(o.description)+"</div>" : "")
+           +  (o.tag ? '<span class="c-tag">'+escapeHtml(o.tag)+"</span>" : "")
+           +  "</div>";
+    }
+    html += "</div>";
+  }
+  else if(q.type === "counters"){
+    const obj = (v && typeof v === "object") ? v : {};
+    html += '<div class="counter-grid">';
+    for(const it of q.items){
+      const n = Number(obj[it.value] || 0);
+      html += '<div class="counter-card'+(n>0?' active':'')+'">'
+           +  '<span class="check">✓</span>'
+           +  (it.icon ? '<div class="c-icon">'+it.icon+"</div>" : "")
+           +  '<div class="c-label">'+escapeHtml(it.label)+"</div>"
+           +  '<div class="c-desc">'+escapeHtml(it.description||"")+"</div>"
+           +  '<div class="stepper">'
+           +  '<button type="button" data-step-q="'+q.id+'" data-step-f="'+it.value+'" data-step-d="-1" aria-label="Diminuer">−</button>'
+           +  '<span class="val">'+n+"</span>"
+           +  '<button type="button" data-step-q="'+q.id+'" data-step-f="'+it.value+'" data-step-d="1" aria-label="Augmenter">+</button>'
+           +  "</div></div>";
+    }
+    html += "</div>";
+  }
+  else if(q.type === "yesno" || q.type === "radio"){
+    const opts = q.type === "yesno" ? YESNO : q.options;
+    html += '<div class="choices">';
+    for(const o of opts){
+      const checked = v === o.value;
+      html += '<label class="choice'+(checked?' checked':'')+'"><input type="radio" name="'+q.id+'" value="'+escapeHtml(o.value)+'"'+(checked?' checked':'')+'> '+escapeHtml(o.label)+"</label>";
+    }
+    html += "</div>";
+  }
+  else if(q.type === "checkbox"){
+    const arr = Array.isArray(v) ? v : [];
+    html += '<div class="choices">';
+    for(const o of q.options){
+      const checked = arr.includes(o.value);
+      html += '<label class="choice'+(checked?' checked':'')+'"><input type="checkbox" name="'+q.id+'" value="'+escapeHtml(o.value)+'"'+(checked?' checked':'')+'> '+escapeHtml(o.label)+"</label>";
+    }
+    html += "</div>";
+  }
+  else if(q.type === "select"){
+    html += '<select id="f_'+q.id+'" name="'+q.id+'"><option value="">Choisissez…</option>';
+    for(const o of q.options){
+      html += '<option value="'+escapeHtml(o.value)+'"'+(v===o.value?' selected':'')+'>'+escapeHtml(o.label)+"</option>";
+    }
+    html += "</select>";
+  }
+  else if(q.type === "textarea"){
+    html += '<textarea id="f_'+q.id+'" name="'+q.id+'" placeholder="'+escapeHtml(q.placeholder||"")+'">'+escapeHtml(v||"")+"</textarea>";
+  }
+  else if(q.type === "currency"){
+    html += '<div class="currency-wrap"><input type="number" inputmode="decimal" id="f_'+q.id+'" name="'+q.id+'" min="'+(q.min ?? 0)+'" step="0.01" placeholder="'+escapeHtml(q.placeholder||"")+'" value="'+escapeHtml(v??"")+'"><span class="unit">$ / mois</span></div>';
+  }
+  else{
+    const typeMap = {text:"text", tel:"tel", email:"email", number:"number", date:"date"};
+    const t = typeMap[q.type] || "text";
+    const minAttr = (q.type === "number" && q.min !== undefined) ? ' min="'+q.min+'"' : "";
+    html += '<input type="'+t+'" id="f_'+q.id+'" name="'+q.id+'"'+minAttr+' placeholder="'+escapeHtml(q.placeholder||"")+'" value="'+escapeHtml(v??"")+'">';
+  }
+
+  html += '<div class="error-msg" id="err_'+q.id+'"></div>';
+  wrap.innerHTML = html;
+  return wrap;
+}
+
+function renderStep(){
+  const sec = sections[step];
+  $("#progressStep").textContent = "Question "+(step+1)+" de "+sections.length;
+  $("#sectionTitle").textContent = sec.title;
+  $("#sectionHelp").textContent = sec.help || "";
+  const pct = Math.round((step)/(sections.length)*100);
+  $("#progressFill").style.width = Math.max(pct, 4)+"%";
+
+  const form = $("#questions");
+  form.innerHTML = "";
+  const vis = visibleIds(answers);
+  for(const q of sec.questions){
+    if(!vis.has(q.id)) continue;
+    form.appendChild(renderQuestion(q));
+  }
+
+  $("#btnPrev").style.visibility = step === 0 ? "hidden" : "visible";
+  $("#btnNext").textContent = step === sections.length-1 ? "Voir mon résumé ✓" : "Suivant";
+  $("#btnNext").className = step === sections.length-1 ? "btn-green" : "btn-primary";
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ======================= Saisie ======================= */
+// cartes sélectionnables + compteurs (éléments non natifs) : clics délégués
+document.addEventListener("click", (e) => {
+  const card = e.target.closest("[data-card-q]");
+  if(card){
+    const q = questionById(card.dataset.cardQ);
+    const val = card.dataset.cardV;
+    if(q.multi){
+      let arr = Array.isArray(answers[q.id]) ? answers[q.id].slice() : [];
+      if(arr.includes(val)) arr = arr.filter(x => x !== val);
+      else if(q.exclusive && val === q.exclusive) arr = [val];
+      else { arr = arr.filter(x => x !== q.exclusive); arr.push(val); }
+      answers[q.id] = arr;
+    } else {
+      answers[q.id] = (answers[q.id] === val) ? undefined : val;
+    }
+    saveDraft(); renderStep();
+    return;
+  }
+  const stepBtn = e.target.closest("[data-step-q]");
+  if(stepBtn){
+    const qid = stepBtn.dataset.stepQ, f = stepBtn.dataset.stepF, d = Number(stepBtn.dataset.stepD);
+    const obj = (answers[qid] && typeof answers[qid] === "object") ? Object.assign({}, answers[qid]) : {};
+    obj[f] = Math.max(0, Number(obj[f] || 0) + d);
+    answers[qid] = obj;
+    saveDraft(); renderStep();
+  }
+});
+// clavier : Espace/Entrée sur une carte
+document.addEventListener("keydown", (e) => {
+  if((e.key === " " || e.key === "Enter") && e.target.matches("[data-card-q]")){
+    e.preventDefault(); e.target.click();
+  }
+});
+
+document.addEventListener("change", (e) => {
+  const el = e.target;
+  if(!el.name || !questionById(el.name)) return;
+  const q = questionById(el.name);
+  if(q.type === "checkbox"){
+    let arr = Array.isArray(answers[q.id]) ? answers[q.id].slice() : [];
+    if(el.checked){
+      if(q.exclusive && el.value === q.exclusive) arr = [el.value];
+      else { arr = arr.filter(x => x !== q.exclusive); arr.push(el.value); }
+    } else {
+      arr = arr.filter(x => x !== el.value);
+    }
+    answers[q.id] = arr;
+  } else {
+    answers[q.id] = el.value;
+  }
+  saveDraft();
+  if(["yesno","radio","checkbox","select"].includes(q.type)) renderStep();
+});
+
+document.addEventListener("input", (e) => {
+  const el = e.target;
+  if(!el.name || !questionById(el.name)) return;
+  const q = questionById(el.name);
+  if(["yesno","radio","checkbox","select"].includes(q.type)) return;
+  answers[q.id] = el.value;
+  saveDraft();
+});
+
+/* ======================= Validation ======================= */
+function validateStep(){
+  const sec = sections[step];
+  const vis = visibleIds(answers);
+  let firstError = null;
+
+  for(const q of sec.questions){
+    if(q.type === "alert" || !vis.has(q.id)) continue;
+    const node = document.querySelector('[data-qid="'+q.id+'"]');
+    if(!node) continue;
+    node.classList.remove("has-error");
+    const err = node.querySelector(".error-msg");
+
+    const v = answers[q.id];
+    let msg = "";
+
+    if(q.type === "counters"){
+      const rm = q.requireMin;
+      if(rm){
+        const total = rm.fields.reduce((s,f) => s + Number((v||{})[f] || 0), 0);
+        if(total < (rm.total || 1)) msg = rm.message || "Indiquez au moins une quantité.";
+      }
+    } else {
+      const empty = v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
+      if(q.required && empty) msg = "Cette réponse est requise.";
+      else if(!empty && q.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = "Veuillez entrer un courriel valide.";
+      else if(!empty && (q.type === "number" || q.type === "currency") && q.min !== undefined && Number(v) < q.min) msg = "Valeur minimale : "+q.min+".";
+    }
+
+    if(msg){
+      node.classList.add("has-error");
+      if(err) err.textContent = msg;
+      if(!firstError) firstError = node;
+    }
+  }
+  if(firstError){ firstError.scrollIntoView({behavior:"smooth", block:"center"}); return false; }
+  return true;
+}
+
+/* ======================= Navigation ======================= */
+$("#btnStart").addEventListener("click", () => { localStorage.removeItem(STORAGE_KEY); answers = {}; step = 0; showWizard(); });
+$("#btnResume").addEventListener("click", () => { showWizard(); });
+$("#btnPrev").addEventListener("click", () => { if(step > 0){ step--; saveDraft(); renderStep(); } });
+$("#btnNext").addEventListener("click", () => {
+  if(!validateStep()) return;
+  if(step < sections.length-1){ step++; saveDraft(); renderStep(); }
+  else finish();
+});
+$("#btnRestart").addEventListener("click", () => {
+  if(!confirm("Effacer toutes les réponses et recommencer?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  answers = {}; step = 0;
+  $("#result").hidden = true;
+  showWizard();
+});
+
+function showWizard(){
+  $("#intro").hidden = true;
+  $("#result").hidden = true;
+  $("#wizard").hidden = false;
+  renderStep();
+}
+
+/* ======================= Brouillon (localStorage) ======================= */
+function saveDraft(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify({answers, step})); }catch(e){}
+}
+function loadDraft(){
+  try{
+    const d = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if(d && d.answers && Object.keys(d.answers).length){
+      answers = d.answers;
+      step = Math.min(d.step || 0, sections.length-1);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+/* ======================= Analyse & recommandation ======================= */
+function tierIndex(id){ return CONFIG.tiers.findIndex(t => t.id === id); }
+
+function substitute(template, eff){
+  return template.replace(/\{(\w+)(?:\.(\w+))?\}/g, (m, qid, field) => {
+    const q = questionById(qid);
+    let v = eff[qid];
+    if(field !== undefined) v = (v && typeof v === "object") ? (v[field] || 0) : "?";
+    if(v === undefined) return "?";
+    if(field !== undefined) return String(v);
+    return q ? formatAnswer(q, v) : String(v);
+  });
+}
+
+/* Licences = somme des compteurs marqués "licence": true dans la config;
+   extensions = compteurs marqués "extension": true. */
+function countFlagged(eff, flag){
+  let total = 0;
+  for(const sec of sections){
+    for(const q of sec.questions){
+      if(q.type !== "counters") continue;
+      const v = eff[q.id] || {};
+      for(const it of q.items){
+        if(it[flag]) total += Number(v[it.value] || 0);
+      }
+    }
+  }
+  return total;
+}
+
+function computeResults(){
+  const eff = effectiveAnswers();
+
+  let best = 0;
+  const reasons = [];
+  for(const r of CONFIG.recommendationRules){
+    if(evalCond(r.when, eff)){
+      reasons.push({tier: r.tier, reason: r.reason});
+      const ti = tierIndex(r.tier);
+      if(ti > best) best = ti;
+    }
+  }
+  const tier = CONFIG.tiers[best];
+
+  const salesNotes = [];
+  for(const r of CONFIG.salesNoteRules){
+    if(evalCond(r.when, eff)) salesNotes.push(substitute(r.note, eff));
+  }
+
+  const equipment = [];
+  for(const r of CONFIG.equipmentRules){
+    if(evalCond(r.when, eff)) equipment.push(substitute(r.item, eff));
+  }
+
+  const licences = countFlagged(eff, "licence");
+  const extensions = countFlagged(eff, "extension");
+
+  let pricing = null;
+  if(CONFIG.pricing && CONFIG.pricing.enabled){
+    const p = Number(CONFIG.pricing.tiers[tier.id]) || 0;
+    if(p > 0 && licences > 0){
+      pricing = { perLicence: p, total: p * licences,
+                  currencyLabel: CONFIG.pricing.currencyLabel, note: CONFIG.pricing.note };
+    }
+  }
+
+  return { eff, tier, reasons, salesNotes, equipment, licences, extensions, pricing };
+}
+
+/* ======================= Génération du rapport ======================= */
+function answersTableHtml(eff){
+  let html = "";
+  const vis = visibleIds(answers);
+  for(const sec of sections){
+    const rows = sec.questions.filter(q => q.type !== "alert" && vis.has(q.id));
+    if(!rows.length) continue;
+    html += '<table class="answers-table"><tr><th colspan="2">'+(sec.icon||"")+" "+escapeHtml(sec.title)+"</th></tr>";
+    for(const q of rows){
+      html += "<tr><td>"+escapeHtml(q.label)+"</td><td><b>"+escapeHtml(formatAnswer(q, eff[q.id]))+"</b></td></tr>";
+    }
+    html += "</table><br>";
+  }
+  return html;
+}
+
+function listHtml(items){
+  if(!items.length) return "<p>—</p>";
+  return "<ul>"+items.map(x => "<li>"+escapeHtml(x)+"</li>").join("")+"</ul>";
+}
+
+function kpiHtml(res){
+  const kpis = [
+    {n: res.licences,   t: "Licence(s) Business Connect"},
+    {n: res.extensions, t: "Extension(s) simple(s)"}
+  ];
+  const sites = Number(res.eff.fonc_sites_nb || 0);
+  if(sites) kpis.push({n: sites, t: "Emplacement(s)"});
+  const pub = Number((res.eff.lignes || {}).pub || 0);
+  if(pub) kpis.push({n: pub, t: "Ligne(s) publique(s)"});
+  return '<div class="kpis">'+kpis.map(k => '<div class="kpi"><div class="n">'+k.n+'</div><div class="t">'+escapeHtml(k.t)+"</div></div>").join("")+"</div>";
+}
+
+function buildResultBody(res, forClient){
+  let html = "";
+  const showReco = !forClient || CONFIG.app.showRecommendationToClient !== false;
+
+  if(showReco){
+    html += '<div class="reco-card"><div class="eyebrow">Niveau de forfait recommandé</div>'
+         +  '<div class="tier">'+escapeHtml(res.tier.label)+"</div>"
+         +  '<div class="desc">'+escapeHtml(res.tier.description)+"</div></div>";
+  }
+
+  html += kpiHtml(res);
+
+  if(showReco && res.reasons.length){
+    html += '<div class="result-block"><h3>Pourquoi ce niveau?</h3>'
+         +  listHtml(res.reasons.map(r => r.reason+" → minimum "+CONFIG.tiers[tierIndex(r.tier)].label))
+         +  "</div>";
+  }
+
+  if(res.pricing){
+    html += '<div class="result-block"><h3>Estimation budgétaire</h3><p><b>'
+         +  res.pricing.total.toFixed(2)+" $ / mois</b> ("+res.licences+" × "
+         +  res.pricing.perLicence.toFixed(2)+" "+escapeHtml(res.pricing.currencyLabel)+")<br><small>"
+         +  escapeHtml(res.pricing.note)+"</small></p></div>";
+  }
+
+  if(res.equipment.length){
+    html += '<div class="result-block"><h3>Équipements à prévoir</h3>'+listHtml(res.equipment)+"</div>";
+  }
+
+  if(showReco && res.salesNotes.length){
+    html += '<div class="result-block"><h3>Points à retenir pour la proposition</h3>'+listHtml(res.salesNotes)+"</div>";
+  }
+
+  html += '<div class="result-block"><h3>Résumé de vos réponses</h3>'+answersTableHtml(res.eff)+"</div>";
+  return html;
+}
+
+function buildPrintReport(res){
+  const eff = res.eff;
+  const now = new Date().toLocaleString("fr-CA", {dateStyle:"long", timeStyle:"short"});
+  let html = "<h1>Rapport de qualification — TELUS Business Connect</h1>"
+           + '<p class="sub">Généré le '+escapeHtml(now)+"</p>";
+
+  html += "<h2>Profil client</h2><table>"
+       +  "<tr><td>Nom</td><td><b>"+escapeHtml(eff.c_nom||"—")+"</b></td><td>Entreprise</td><td><b>"+escapeHtml(eff.c_entreprise||"—")+"</b></td></tr>"
+       +  "<tr><td>Courriel</td><td><b>"+escapeHtml(eff.c_courriel||"—")+"</b></td><td>Téléphone</td><td><b>"+escapeHtml(eff.c_tel||"—")+"</b></td></tr>"
+       +  "<tr><td>Meilleur moment pour un suivi</td><td colspan='3'><b>"+escapeHtml(formatAnswer(questionById("c_moment"), eff.c_moment))+"</b></td></tr>"
+       +  "</table>";
+
+  html += "<h2>Recommandation</h2>"
+       +  '<div class="reco"><b>Niveau minimum requis : '+escapeHtml(res.tier.label)+"</b><br>"
+       +  escapeHtml(res.tier.description)+"<br><b>"+res.licences+"</b> licence(s)"
+       +  (res.extensions ? " + <b>"+res.extensions+"</b> extension(s) simple(s)" : "")+".</div>";
+  if(res.reasons.length){
+    html += "<ul>"+res.reasons.map(r => "<li>"+escapeHtml(r.reason)+" → minimum <b>"
+         +  escapeHtml(CONFIG.tiers[tierIndex(r.tier)].label)+"</b></li>").join("")+"</ul>";
+  }
+
+  if(res.pricing){
+    html += "<h2>Estimation budgétaire</h2><p><b>"+res.pricing.total.toFixed(2)+" $ / mois</b> ("
+         +  res.licences+" × "+res.pricing.perLicence.toFixed(2)+" "+escapeHtml(res.pricing.currencyLabel)+") — "
+         +  escapeHtml(res.pricing.note)+"</p>";
+  }
+
+  html += "<h2>Notes pour la vente</h2>"+(res.salesNotes.length ? "<ul>"+res.salesNotes.map(n => "<li>"+escapeHtml(n)+"</li>").join("")+"</ul>" : "<p>Aucune note particulière.</p>");
+  html += "<h2>Équipements à prévoir</h2>"+(res.equipment.length ? "<ul>"+res.equipment.map(n => "<li>"+escapeHtml(n)+"</li>").join("")+"</ul>" : "<p>Aucun équipement particulier.</p>");
+
+  html += "<h2>Résumé complet des réponses</h2>";
+  const vis = visibleIds(answers);
+  for(const sec of sections){
+    const rows = sec.questions.filter(q => q.type !== "alert" && vis.has(q.id));
+    if(!rows.length) continue;
+    html += "<table><tr><th colspan='2'>"+escapeHtml(sec.title)+"</th></tr>";
+    for(const q of rows){
+      html += "<tr><td style='width:55%'>"+escapeHtml(q.label)+"</td><td><b>"+escapeHtml(formatAnswer(q, eff[q.id]))+"</b></td></tr>";
+    }
+    html += "</table><br>";
+  }
+  return html;
+}
+
+/* ======================= Exports ======================= */
+function reportData(res){
+  const eff = res.eff;
+  const vis = visibleIds(answers);
+  const reponses = [];
+  for(const sec of sections){
+    for(const q of sec.questions){
+      if(q.type === "alert" || !vis.has(q.id)) continue;
+      reponses.push({ section: sec.title, question: q.label, reponse: formatAnswer(q, eff[q.id]), valeur: eff[q.id] ?? null });
+    }
+  }
+  return {
+    genereLe: new Date().toISOString(),
+    client: { nom: eff.c_nom||"", entreprise: eff.c_entreprise||"", courriel: eff.c_courriel||"", telephone: eff.c_tel||"", meilleurMoment: formatAnswer(questionById("c_moment"), eff.c_moment) },
+    recommandation: {
+      niveauMinimum: res.tier.label,
+      description: res.tier.description,
+      licences: res.licences,
+      extensions: res.extensions,
+      justifications: res.reasons.map(r => r.reason+" → minimum "+CONFIG.tiers[tierIndex(r.tier)].label)
+    },
+    kpis: {
+      licences: res.licences,
+      extensions: res.extensions,
+      lignesPubliques: Number((eff.lignes || {}).pub || 0),
+      emplacements: Number(eff.fonc_sites_nb || 0) || null,
+      coutMensuelActuel: eff.sit_eng_cout ? Number(eff.sit_eng_cout) : null
+    },
+    notesVente: res.salesNotes,
+    equipements: res.equipment,
+    estimation: res.pricing,
+    reponses
+  };
+}
+
+function download(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+function slug(s){ return (s||"client").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"") || "client"; }
+
+function toText(data){
+  const L = [];
+  L.push("RAPPORT DE QUALIFICATION — TELUS BUSINESS CONNECT");
+  L.push("Généré le : "+new Date(data.genereLe).toLocaleString("fr-CA"));
+  L.push("");
+  L.push("== PROFIL CLIENT ==");
+  L.push("Nom : "+data.client.nom);
+  L.push("Entreprise : "+data.client.entreprise);
+  L.push("Courriel : "+data.client.courriel);
+  L.push("Téléphone : "+data.client.telephone);
+  L.push("Meilleur moment pour un suivi : "+data.client.meilleurMoment);
+  L.push("");
+  L.push("== RECOMMANDATION ==");
+  L.push("Niveau minimum requis : "+data.recommandation.niveauMinimum);
+  L.push("Licences : "+data.recommandation.licences+(data.recommandation.extensions ? " + "+data.recommandation.extensions+" extension(s) simple(s)" : ""));
+  for(const j of data.recommandation.justifications) L.push("  - "+j);
+  L.push("");
+  L.push("== NOTES POUR LA VENTE ==");
+  if(data.notesVente.length) for(const n of data.notesVente) L.push("  - "+n);
+  else L.push("  (aucune)");
+  L.push("");
+  L.push("== ÉQUIPEMENTS À PRÉVOIR ==");
+  if(data.equipements.length) for(const e of data.equipements) L.push("  - "+e);
+  else L.push("  (aucun)");
+  L.push("");
+  L.push("== RÉPONSES COMPLÈTES ==");
+  let lastSection = "";
+  for(const r of data.reponses){
+    if(r.section !== lastSection){ L.push(""); L.push("-- "+r.section+" --"); lastSection = r.section; }
+    L.push(r.question+" : "+r.reponse);
+  }
+  return L.join("\n");
+}
+
+/* ======================= Soumission ======================= */
+let lastResults = null;
+
+function finish(){
+  lastResults = computeResults();
+  $("#wizard").hidden = true;
+  $("#result").hidden = false;
+  $("#resultBody").innerHTML = buildResultBody(lastResults, true);
+  $("#printReport").innerHTML = buildPrintReport(lastResults);
+  window.scrollTo({top:0, behavior:"smooth"});
+  sendToFormspree();
+}
+
+function sendToFormspree(){
+  const endpoint = (CONFIG.app.formspreeEndpoint || "").trim();
+  const status = $("#sendStatus");
+  status.textContent = ""; status.className = "send-status";
+  if(!endpoint) return;
+  status.textContent = "Envoi du rapport à votre conseiller…";
+  const data = reportData(lastResults);
+  fetch(endpoint, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Accept": "application/json"},
+    body: JSON.stringify(data)
+  }).then(r => {
+    if(r.ok){ status.textContent = "✅ Rapport transmis à votre conseiller TELUS."; status.className = "send-status ok"; }
+    else throw new Error("HTTP "+r.status);
+  }).catch(() => {
+    status.textContent = "⚠️ Le rapport n'a pas pu être transmis automatiquement — téléchargez-le et envoyez-le par courriel.";
+    status.className = "send-status err";
+  });
+}
+
+$("#btnPrint").addEventListener("click", () => window.print());
+$("#btnJson").addEventListener("click", () => {
+  const data = reportData(lastResults);
+  download("qualification-bconn-"+slug(data.client.entreprise)+".json", JSON.stringify(data, null, 2), "application/json");
+});
+$("#btnTxt").addEventListener("click", () => {
+  const data = reportData(lastResults);
+  download("qualification-bconn-"+slug(data.client.entreprise)+".txt", toText(data), "text/plain;charset=utf-8");
+});
+
+/* ======================= Initialisation ======================= */
+$("#appSubtitle").textContent = CONFIG.app.subtitle;
+$("#introText").textContent = CONFIG.app.intro;
+document.title = "Questionnaire — "+CONFIG.app.title;
+if(loadDraft()) $("#btnResume").hidden = false;
+
+// exposé pour les tests automatisés
+window.__bconnExport = () => lastResults ? reportData(lastResults) : null;
+
+})();
+</script>
+</body>
+</html>
