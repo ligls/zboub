@@ -1,0 +1,1481 @@
+<title>Signal Atlas</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* required styles */
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+	position: absolute;
+	left: 0;
+	top: 0;
+	}
+.leaflet-container {
+	overflow: hidden;
+	}
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	-webkit-user-select: none;
+	   -moz-user-select: none;
+	        user-select: none;
+	  -webkit-user-drag: none;
+	}
+/* Prevents IE11 from highlighting tiles in blue */
+.leaflet-tile::selection {
+	background: transparent;
+}
+/* Safari renders non-retina tile on retina better with this, but Chrome is worse */
+.leaflet-safari .leaflet-tile {
+	image-rendering: -webkit-optimize-contrast;
+	}
+/* hack that prevents hw layers "stretching" when loading new tiles */
+.leaflet-safari .leaflet-tile-container {
+	width: 1600px;
+	height: 1600px;
+	-webkit-transform-origin: 0 0;
+	}
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+	display: block;
+	}
+/* .leaflet-container svg: reset svg max-width decleration shipped in Joomla! (joomla.org) 3.x */
+/* .leaflet-container img: map is broken in FF if you have max-width: 100% on tiles */
+.leaflet-container .leaflet-overlay-pane svg {
+	max-width: none !important;
+	max-height: none !important;
+	}
+.leaflet-container .leaflet-marker-pane img,
+.leaflet-container .leaflet-shadow-pane img,
+.leaflet-container .leaflet-tile-pane img,
+.leaflet-container img.leaflet-image-layer,
+.leaflet-container .leaflet-tile {
+	max-width: none !important;
+	max-height: none !important;
+	width: auto;
+	padding: 0;
+	}
+
+.leaflet-container img.leaflet-tile {
+	/* See: https://bugs.chromium.org/p/chromium/issues/detail?id=600120 */
+	mix-blend-mode: plus-lighter;
+}
+
+.leaflet-container.leaflet-touch-zoom {
+	-ms-touch-action: pan-x pan-y;
+	touch-action: pan-x pan-y;
+	}
+.leaflet-container.leaflet-touch-drag {
+	-ms-touch-action: pinch-zoom;
+	/* Fallback for FF which doesn't support pinch-zoom */
+	touch-action: none;
+	touch-action: pinch-zoom;
+}
+.leaflet-container.leaflet-touch-drag.leaflet-touch-zoom {
+	-ms-touch-action: none;
+	touch-action: none;
+}
+.leaflet-container {
+	-webkit-tap-highlight-color: transparent;
+}
+.leaflet-container a {
+	-webkit-tap-highlight-color: rgba(51, 181, 229, 0.4);
+}
+.leaflet-tile {
+	filter: inherit;
+	visibility: hidden;
+	}
+.leaflet-tile-loaded {
+	visibility: inherit;
+	}
+.leaflet-zoom-box {
+	width: 0;
+	height: 0;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	z-index: 800;
+	}
+/* workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=888319 */
+.leaflet-overlay-pane svg {
+	-moz-user-select: none;
+	}
+
+.leaflet-pane         { z-index: 400; }
+
+.leaflet-tile-pane    { z-index: 200; }
+.leaflet-overlay-pane { z-index: 400; }
+.leaflet-shadow-pane  { z-index: 500; }
+.leaflet-marker-pane  { z-index: 600; }
+.leaflet-tooltip-pane   { z-index: 650; }
+.leaflet-popup-pane   { z-index: 700; }
+
+.leaflet-map-pane canvas { z-index: 100; }
+.leaflet-map-pane svg    { z-index: 200; }
+
+.leaflet-vml-shape {
+	width: 1px;
+	height: 1px;
+	}
+.lvml {
+	behavior: url(#default#VML);
+	display: inline-block;
+	position: absolute;
+	}
+
+
+/* control positioning */
+
+.leaflet-control {
+	position: relative;
+	z-index: 800;
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+.leaflet-top,
+.leaflet-bottom {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	}
+.leaflet-top {
+	top: 0;
+	}
+.leaflet-right {
+	right: 0;
+	}
+.leaflet-bottom {
+	bottom: 0;
+	}
+.leaflet-left {
+	left: 0;
+	}
+.leaflet-control {
+	float: left;
+	clear: both;
+	}
+.leaflet-right .leaflet-control {
+	float: right;
+	}
+.leaflet-top .leaflet-control {
+	margin-top: 10px;
+	}
+.leaflet-bottom .leaflet-control {
+	margin-bottom: 10px;
+	}
+.leaflet-left .leaflet-control {
+	margin-left: 10px;
+	}
+.leaflet-right .leaflet-control {
+	margin-right: 10px;
+	}
+
+
+/* zoom and fade animations */
+
+.leaflet-fade-anim .leaflet-popup {
+	opacity: 0;
+	-webkit-transition: opacity 0.2s linear;
+	   -moz-transition: opacity 0.2s linear;
+	        transition: opacity 0.2s linear;
+	}
+.leaflet-fade-anim .leaflet-map-pane .leaflet-popup {
+	opacity: 1;
+	}
+.leaflet-zoom-animated {
+	-webkit-transform-origin: 0 0;
+	    -ms-transform-origin: 0 0;
+	        transform-origin: 0 0;
+	}
+svg.leaflet-zoom-animated {
+	will-change: transform;
+}
+
+.leaflet-zoom-anim .leaflet-zoom-animated {
+	-webkit-transition: -webkit-transform 0.25s cubic-bezier(0,0,0.25,1);
+	   -moz-transition:    -moz-transform 0.25s cubic-bezier(0,0,0.25,1);
+	        transition:         transform 0.25s cubic-bezier(0,0,0.25,1);
+	}
+.leaflet-zoom-anim .leaflet-tile,
+.leaflet-pan-anim .leaflet-tile {
+	-webkit-transition: none;
+	   -moz-transition: none;
+	        transition: none;
+	}
+
+.leaflet-zoom-anim .leaflet-zoom-hide {
+	visibility: hidden;
+	}
+
+
+/* cursors */
+
+.leaflet-interactive {
+	cursor: pointer;
+	}
+.leaflet-grab {
+	cursor: -webkit-grab;
+	cursor:    -moz-grab;
+	cursor:         grab;
+	}
+.leaflet-crosshair,
+.leaflet-crosshair .leaflet-interactive {
+	cursor: crosshair;
+	}
+.leaflet-popup-pane,
+.leaflet-control {
+	cursor: auto;
+	}
+.leaflet-dragging .leaflet-grab,
+.leaflet-dragging .leaflet-grab .leaflet-interactive,
+.leaflet-dragging .leaflet-marker-draggable {
+	cursor: move;
+	cursor: -webkit-grabbing;
+	cursor:    -moz-grabbing;
+	cursor:         grabbing;
+	}
+
+/* marker & overlays interactivity */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-image-layer,
+.leaflet-pane > svg path,
+.leaflet-tile-container {
+	pointer-events: none;
+	}
+
+.leaflet-marker-icon.leaflet-interactive,
+.leaflet-image-layer.leaflet-interactive,
+.leaflet-pane > svg path.leaflet-interactive,
+svg.leaflet-image-layer.leaflet-interactive path {
+	pointer-events: visiblePainted; /* IE 9-10 doesn't have auto */
+	pointer-events: auto;
+	}
+
+/* visual tweaks */
+
+.leaflet-container {
+	background: #ddd;
+	outline-offset: 1px;
+	}
+.leaflet-container a {
+	color: #0078A8;
+	}
+.leaflet-zoom-box {
+	border: 2px dotted #38f;
+	background: rgba(255,255,255,0.5);
+	}
+
+
+/* general typography */
+.leaflet-container {
+	font-family: "Helvetica Neue", Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-size: 0.75rem;
+	line-height: 1.5;
+	}
+
+
+/* general toolbar styles */
+
+.leaflet-bar {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	border-radius: 4px;
+	}
+.leaflet-bar a {
+	background-color: #fff;
+	border-bottom: 1px solid #ccc;
+	width: 26px;
+	height: 26px;
+	line-height: 26px;
+	display: block;
+	text-align: center;
+	text-decoration: none;
+	color: black;
+	}
+.leaflet-bar a,
+.leaflet-control-layers-toggle {
+	background-position: 50% 50%;
+	background-repeat: no-repeat;
+	display: block;
+	}
+.leaflet-bar a:hover,
+.leaflet-bar a:focus {
+	background-color: #f4f4f4;
+	}
+.leaflet-bar a:first-child {
+	border-top-left-radius: 4px;
+	border-top-right-radius: 4px;
+	}
+.leaflet-bar a:last-child {
+	border-bottom-left-radius: 4px;
+	border-bottom-right-radius: 4px;
+	border-bottom: none;
+	}
+.leaflet-bar a.leaflet-disabled {
+	cursor: default;
+	background-color: #f4f4f4;
+	color: #bbb;
+	}
+
+.leaflet-touch .leaflet-bar a {
+	width: 30px;
+	height: 30px;
+	line-height: 30px;
+	}
+.leaflet-touch .leaflet-bar a:first-child {
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	}
+.leaflet-touch .leaflet-bar a:last-child {
+	border-bottom-left-radius: 2px;
+	border-bottom-right-radius: 2px;
+	}
+
+/* zoom control */
+
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out {
+	font: bold 18px 'Lucida Console', Monaco, monospace;
+	text-indent: 1px;
+	}
+
+.leaflet-touch .leaflet-control-zoom-in, .leaflet-touch .leaflet-control-zoom-out  {
+	font-size: 22px;
+	}
+
+
+/* layers control */
+
+.leaflet-control-layers {
+	box-shadow: 0 1px 5px rgba(0,0,0,0.4);
+	background: #fff;
+	border-radius: 5px;
+	}
+.leaflet-control-layers-toggle {
+	background-image: url(images/layers.png);
+	width: 36px;
+	height: 36px;
+	}
+.leaflet-retina .leaflet-control-layers-toggle {
+	background-image: url(images/layers-2x.png);
+	background-size: 26px 26px;
+	}
+.leaflet-touch .leaflet-control-layers-toggle {
+	width: 44px;
+	height: 44px;
+	}
+.leaflet-control-layers .leaflet-control-layers-list,
+.leaflet-control-layers-expanded .leaflet-control-layers-toggle {
+	display: none;
+	}
+.leaflet-control-layers-expanded .leaflet-control-layers-list {
+	display: block;
+	position: relative;
+	}
+.leaflet-control-layers-expanded {
+	padding: 6px 10px 6px 6px;
+	color: #333;
+	background: #fff;
+	}
+.leaflet-control-layers-scrollbar {
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 5px;
+	}
+.leaflet-control-layers-selector {
+	margin-top: 2px;
+	position: relative;
+	top: 1px;
+	}
+.leaflet-control-layers label {
+	display: block;
+	font-size: 13px;
+	font-size: 1.08333em;
+	}
+.leaflet-control-layers-separator {
+	height: 0;
+	border-top: 1px solid #ddd;
+	margin: 5px -10px 5px -6px;
+	}
+
+/* Default icon URLs */
+.leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
+	background-image: url(images/marker-icon.png);
+	}
+
+
+/* attribution and scale controls */
+
+.leaflet-container .leaflet-control-attribution {
+	background: #fff;
+	background: rgba(255, 255, 255, 0.8);
+	margin: 0;
+	}
+.leaflet-control-attribution,
+.leaflet-control-scale-line {
+	padding: 0 5px;
+	color: #333;
+	line-height: 1.4;
+	}
+.leaflet-control-attribution a {
+	text-decoration: none;
+	}
+.leaflet-control-attribution a:hover,
+.leaflet-control-attribution a:focus {
+	text-decoration: underline;
+	}
+.leaflet-attribution-flag {
+	display: inline !important;
+	vertical-align: baseline !important;
+	width: 1em;
+	height: 0.6669em;
+	}
+.leaflet-left .leaflet-control-scale {
+	margin-left: 5px;
+	}
+.leaflet-bottom .leaflet-control-scale {
+	margin-bottom: 5px;
+	}
+.leaflet-control-scale-line {
+	border: 2px solid #777;
+	border-top: none;
+	line-height: 1.1;
+	padding: 2px 5px 1px;
+	white-space: nowrap;
+	-moz-box-sizing: border-box;
+	     box-sizing: border-box;
+	background: rgba(255, 255, 255, 0.8);
+	text-shadow: 1px 1px #fff;
+	}
+.leaflet-control-scale-line:not(:first-child) {
+	border-top: 2px solid #777;
+	border-bottom: none;
+	margin-top: -2px;
+	}
+.leaflet-control-scale-line:not(:first-child):not(:last-child) {
+	border-bottom: 2px solid #777;
+	}
+
+.leaflet-touch .leaflet-control-attribution,
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	box-shadow: none;
+	}
+.leaflet-touch .leaflet-control-layers,
+.leaflet-touch .leaflet-bar {
+	border: 2px solid rgba(0,0,0,0.2);
+	background-clip: padding-box;
+	}
+
+
+/* popup */
+
+.leaflet-popup {
+	position: absolute;
+	text-align: center;
+	margin-bottom: 20px;
+	}
+.leaflet-popup-content-wrapper {
+	padding: 1px;
+	text-align: left;
+	border-radius: 12px;
+	}
+.leaflet-popup-content {
+	margin: 13px 24px 13px 20px;
+	line-height: 1.3;
+	font-size: 13px;
+	font-size: 1.08333em;
+	min-height: 1px;
+	}
+.leaflet-popup-content p {
+	margin: 17px 0;
+	margin: 1.3em 0;
+	}
+.leaflet-popup-tip-container {
+	width: 40px;
+	height: 20px;
+	position: absolute;
+	left: 50%;
+	margin-top: -1px;
+	margin-left: -20px;
+	overflow: hidden;
+	pointer-events: none;
+	}
+.leaflet-popup-tip {
+	width: 17px;
+	height: 17px;
+	padding: 1px;
+
+	margin: -10px auto 0;
+	pointer-events: auto;
+
+	-webkit-transform: rotate(45deg);
+	   -moz-transform: rotate(45deg);
+	    -ms-transform: rotate(45deg);
+	        transform: rotate(45deg);
+	}
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+	background: white;
+	color: #333;
+	box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+	}
+.leaflet-container a.leaflet-popup-close-button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: none;
+	text-align: center;
+	width: 24px;
+	height: 24px;
+	font: 16px/24px Tahoma, Verdana, sans-serif;
+	color: #757575;
+	text-decoration: none;
+	background: transparent;
+	}
+.leaflet-container a.leaflet-popup-close-button:hover,
+.leaflet-container a.leaflet-popup-close-button:focus {
+	color: #585858;
+	}
+.leaflet-popup-scrolled {
+	overflow: auto;
+	}
+
+.leaflet-oldie .leaflet-popup-content-wrapper {
+	-ms-zoom: 1;
+	}
+.leaflet-oldie .leaflet-popup-tip {
+	width: 24px;
+	margin: 0 auto;
+
+	-ms-filter: "progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678)";
+	filter: progid:DXImageTransform.Microsoft.Matrix(M11=0.70710678, M12=0.70710678, M21=-0.70710678, M22=0.70710678);
+	}
+
+.leaflet-oldie .leaflet-control-zoom,
+.leaflet-oldie .leaflet-control-layers,
+.leaflet-oldie .leaflet-popup-content-wrapper,
+.leaflet-oldie .leaflet-popup-tip {
+	border: 1px solid #999;
+	}
+
+
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-interactive {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Printing */
+
+@media print {
+	/* Prevent printers from removing background-images of controls. */
+	.leaflet-control {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		}
+	}
+
+</style>
+<style>
+/* Layout: full-height workbench. Fixed header, left control rail (bottom sheet on phones), map fills the rest.
+   Palette follows the existing TELUS Affaires pages in this repo (violet + green), neutrals tinted violet. */
+:root{
+  --bg:#F4F2F7; --panel:#FFFFFF; --panel-2:#F7F5FA; --line:#DCD6E4; --line-2:#EAE6F0;
+  --fg:#2A2C2E; --muted:#6B6675; --accent:#4B286D; --accent-2:#3A1F54; --accent-soft:#EFEAF5;
+  --green:#66CC00; --green-ink:#2E7D00;
+  --ocean:#D8E4EE; --land:#F1EFF3; --land-out:#E8E6EC; --border:#B9B2C6; --water:#BFD3E6; --river:#A9C3DB;
+  --road:#C9BFD6; --road-major:#A897BC; --urban:#E3DDE9; --label:#4A4458; --label-halo:#FFFFFF;
+  --sig-5:#166534; --sig-4:#4BA300; --sig-3:#D7B600; --sig-2:#E8862B; --sig-1:#C12335;
+  --p-telus:#4B286D; --p-bell:#0B5FA5; --p-rogers:#C8102E; --p-all:#5B5566;
+  --shadow:0 8px 28px rgba(43,24,66,.14);
+  --font-ui:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-cond:"Barlow Condensed","Barlow",system-ui,sans-serif;
+  --radius:8px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17141D; --panel:#201C28; --panel-2:#272231; --line:#3A3346; --line-2:#2F2939;
+  --fg:#ECE8F2; --muted:#A79FB5; --accent:#B596D8; --accent-2:#CDB6E6; --accent-soft:#2E2540;
+  --green:#7FE23A; --green-ink:#9DF06A;
+  --ocean:#141A24; --land:#262330; --land-out:#1F1D27; --border:#5A5070; --water:#1E2E40; --river:#2F4A66;
+  --road:#4B4360; --road-major:#6B5F86; --urban:#332D40; --label:#D9D2E6; --label-halo:#17141D;
+  --sig-5:#1F8A46; --sig-4:#66CC00; --sig-3:#E6C62A; --sig-2:#F09A3E; --sig-1:#E05566;
+  --p-telus:#B596D8; --p-bell:#5FA8E6; --p-rogers:#F06A7A; --p-all:#A79FB5;
+  --shadow:0 8px 28px rgba(0,0,0,.45);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#17141D; --panel:#201C28; --panel-2:#272231; --line:#3A3346; --line-2:#2F2939;
+  --fg:#ECE8F2; --muted:#A79FB5; --accent:#B596D8; --accent-2:#CDB6E6; --accent-soft:#2E2540;
+  --green:#7FE23A; --green-ink:#9DF06A;
+  --ocean:#141A24; --land:#262330; --land-out:#1F1D27; --border:#5A5070; --water:#1E2E40; --river:#2F4A66;
+  --road:#4B4360; --road-major:#6B5F86; --urban:#332D40; --label:#D9D2E6; --label-halo:#17141D;
+  --sig-5:#1F8A46; --sig-4:#66CC00; --sig-3:#E6C62A; --sig-2:#F09A3E; --sig-1:#E05566;
+  --p-telus:#B596D8; --p-bell:#5FA8E6; --p-rogers:#F06A7A; --p-all:#A79FB5;
+  --shadow:0 8px 28px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-ui);font-size:14px;line-height:1.4;overflow:hidden}
+*{box-sizing:border-box}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-rows:auto 1fr;height:100%}
+header.bar{display:flex;align-items:center;gap:14px;padding:8px 16px;background:var(--panel);border-bottom:1px solid var(--line);position:relative;z-index:1200;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand .mark{width:30px;height:30px;border-radius:7px;background:var(--accent);position:relative;flex:none}
+.brand .mark::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--green)}
+.brand h1{margin:0;font-family:var(--font-cond);font-weight:700;font-size:20px;letter-spacing:.01em;line-height:1}
+.brand .eyebrow{font-family:var(--font-cond);font-weight:600;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);line-height:1;margin-top:3px}
+.search{position:relative;flex:1 1 320px;max-width:640px;min-width:0}
+.search input{width:100%;padding:9px 40px 9px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-2)}
+.search input::placeholder{color:var(--muted)}
+.search .go{position:absolute;right:4px;top:4px;bottom:4px;width:34px;border:0;border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;display:grid;place-items:center}
+.search .go svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;max-height:min(50vh,360px);overflow-y:auto}
+.results button{display:flex;width:100%;justify-content:space-between;gap:12px;align-items:baseline;text-align:left;padding:9px 12px;border:0;background:transparent;cursor:pointer;border-bottom:1px solid var(--line-2)}
+.results button:last-child{border-bottom:0}
+.results button:hover,.results button.active{background:var(--accent-soft)}
+.results .kind{font-family:var(--font-cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:none}
+.results .hint{padding:10px 12px;color:var(--muted);font-size:13px}
+.bar .tools{display:flex;gap:8px;margin-left:auto}
+.providers{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-2);padding:3px;gap:2px}
+.providers button{border:0;background:transparent;border-radius:6px;padding:6px 12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:var(--muted);white-space:nowrap}
+.providers button i{width:9px;height:9px;border-radius:50%;background:var(--pc)}
+.providers button[aria-pressed="true"]{background:var(--pc);color:#fff}
+.providers button[aria-pressed="true"] i{background:#fff}
+.providers button:hover:not([aria-pressed="true"]){color:var(--fg)}
+.pcmp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.pcmp td{padding:6px 6px;border-bottom:1px solid var(--line-2);text-align:right}
+.pcmp td:first-child{text-align:left;font-weight:600;padding-left:0}
+.pcmp td:first-child i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:0}
+.pcmp tr.sel td{background:var(--accent-soft)}
+.pcmp .chip{font-size:11px;padding:2px 8px}
+.pcmp .none{color:var(--muted);font-weight:500}
+.pcmp td.bar{width:34%;padding-right:0}
+.pcmp td.bar div{height:7px;border-radius:4px;background:var(--line-2);overflow:hidden}
+.pcmp td.bar div i{display:block;height:100%;border-radius:4px}
+h2 .sub{font-weight:500;letter-spacing:0;text-transform:none;color:var(--fg);margin-left:6px}
+.btn{border:1px solid var(--line);background:var(--panel-2);border-radius:var(--radius);padding:8px 12px;cursor:pointer;font-weight:600;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.work{position:relative;display:grid;grid-template-columns:360px 1fr;min-height:0}
+aside.rail{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;min-width:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+aside.rail[hidden]{display:none}
+.work.rail-hidden{grid-template-columns:1fr}
+.mapwrap{position:relative;min-height:0;min-width:0}
+#map{background:var(--ocean);min-height:0;height:100%;position:absolute;inset:0}
+
+section.block{padding:14px 16px;border-bottom:1px solid var(--line-2)}
+section.block h2{margin:0 0 10px;font-family:var(--font-cond);font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.kpi{background:var(--panel-2);border-radius:var(--radius);padding:10px 10px 8px;min-width:0}
+.kpi b{display:block;font-family:var(--font-cond);font-weight:700;font-size:21px;line-height:1;font-variant-numeric:tabular-nums;color:var(--fg);white-space:nowrap}
+.kpi span{display:block;font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.25}
+.notice{display:flex;gap:10px;align-items:flex-start;background:var(--accent-soft);border-left:3px solid var(--accent);padding:10px 12px;border-radius:6px;font-size:13px}
+.notice b{font-weight:600}
+
+.inspect-empty{color:var(--muted);font-size:13px}
+.coords{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.coords button{border:1px solid var(--line);background:var(--panel-2);border-radius:5px;padding:2px 7px;font-size:11.5px;cursor:pointer}
+.place{font-weight:600;font-size:15px;margin:2px 0 8px}
+.signal{display:flex;align-items:baseline;gap:10px;margin:6px 0 10px}
+.signal b{font-family:var(--font-cond);font-weight:700;font-size:40px;line-height:1;font-variant-numeric:tabular-nums}
+.signal small{color:var(--muted);font-size:13px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-family:var(--font-cond);font-weight:600;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#fff}
+.chip i{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.9}
+table.sites{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+table.sites th{font-family:var(--font-cond);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;padding:4px 6px;border-bottom:1px solid var(--line)}
+table.sites th:first-child,table.sites td:first-child{text-align:left;white-space:nowrap;padding-left:0}
+table.sites td{text-align:right;padding:5px 6px;border-bottom:1px solid var(--line-2)}
+table.sites tr.best td{font-weight:600}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:6px}
+
+.field{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:6px 0}
+.field label{font-size:13px}
+.field output{font-variant-numeric:tabular-nums;font-size:12.5px;color:var(--muted);min-width:64px;text-align:right}
+.field input[type=range]{grid-column:1 / -1;width:100%;accent-color:var(--accent)}
+.field select{grid-column:1 / -1;width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:6px;background:var(--panel-2)}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:7px 0;gap:10px}
+.toggle input{accent-color:var(--accent);width:18px;height:18px}
+.legend{display:grid;gap:5px}
+.legend .row{display:grid;grid-template-columns:14px 1fr auto;gap:10px;align-items:center;font-size:12.5px}
+.legend .row i{width:14px;height:14px;border-radius:3px}
+.legend .row span:last-child{font-variant-numeric:tabular-nums;color:var(--muted)}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.45}
+
+/* map furniture */
+.leaflet-container{font-family:var(--font-ui);font-size:12px}
+.leaflet-container a{color:var(--accent)}
+.leaflet-bar a,.leaflet-bar a:hover{background:var(--panel);color:var(--fg);border-bottom-color:var(--line)}
+.leaflet-bar{border:1px solid var(--line);box-shadow:var(--shadow)}
+.leaflet-control-scale-line{background:var(--panel);color:var(--fg);border-color:var(--border)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--fg);box-shadow:var(--shadow)}
+.leaflet-popup-content{margin:10px 14px;line-height:1.4}
+.leaflet-popup-content b{font-family:var(--font-cond);font-size:14px}
+.leaflet-container .leaflet-popup-close-button{color:var(--muted)}
+.lbl{font-family:var(--font-cond);font-weight:600;color:var(--label);white-space:nowrap;pointer-events:none;
+  text-shadow:0 0 3px var(--label-halo),0 0 3px var(--label-halo),0 0 4px var(--label-halo),0 0 5px var(--label-halo);letter-spacing:.02em}
+.lbl.prov{font-size:13px;letter-spacing:.2em;text-transform:uppercase;opacity:.75;font-weight:700}
+.lbl.city{font-size:12px}
+.lbl.city.big{font-size:14px;font-weight:700}
+.lbl.city::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--label);margin-right:5px;vertical-align:1px}
+.pin{width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--accent);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.status{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:900;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12.5px;box-shadow:var(--shadow);display:flex;gap:8px;align-items:center;pointer-events:none;white-space:nowrap}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+.status.busy .dot{background:var(--sig-3);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+@media (prefers-reduced-motion: reduce){.status.busy .dot{animation:none}}
+.maplegend{position:absolute;right:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px));z-index:900;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:8px 10px;box-shadow:var(--shadow);display:flex;gap:2px;align-items:flex-end}
+.maplegend .b{display:grid;gap:3px;justify-items:center;font-family:var(--font-cond);font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.maplegend .b i{display:block;width:34px;height:9px;border-radius:2px}
+.maplegend .b:first-child i{border-radius:4px 2px 2px 4px}
+
+@media (max-width: 820px){
+  .work{grid-template-columns:1fr;grid-template-rows:1fr auto}
+  aside.rail{border-right:0;border-top:1px solid var(--line);max-height:46vh;order:2}
+  .mapwrap{order:1}
+  .search{order:3;flex-basis:100%}
+  .providers{order:4;flex-basis:100%;justify-content:stretch}
+  .providers button{flex:1;justify-content:center;padding:6px 8px}
+  .bar .tools{margin-left:auto}
+  .kpis{grid-template-columns:repeat(3,1fr)}
+  .maplegend{display:none}
+  .brand .eyebrow{display:none}
+  header.bar{padding:8px 16px}
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"></div>
+      <div>
+        <h1>Signal Atlas</h1>
+        <div class="eyebrow">Macro-site coverage · Longley-Rice / Hata estimate</div>
+      </div>
+    </div>
+    <form class="search" id="searchForm" autocomplete="off">
+      <input id="q" type="search" placeholder="City or town, or coordinates like 49.0925, -122.6101" aria-label="Search a place or coordinates" />
+      <button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <div class="results" id="results" hidden role="listbox"></div>
+    </form>
+    <div class="providers" id="providers" role="group" aria-label="Provider"></div>
+    <div class="tools">
+      <button class="btn" id="toggleRail" type="button" aria-pressed="true" aria-controls="rail"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Panel</button>
+      <button class="btn" id="toggleCoverage" type="button" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 1 6 6c0 4-6 12-6 12S6 13 6 9a6 6 0 0 1 6-6Z"/><circle cx="12" cy="9" r="2"/></svg>Coverage</button>
+    </div>
+  </header>
+
+  <div class="work" id="work">
+    <aside class="rail" id="rail">
+      <section class="block" id="dataNotice" hidden>
+        <div class="notice"><div><b>Sample sites shown.</b> <span id="noticeText"></span></div></div>
+      </section>
+      <section class="block">
+        <h2>Network <span class="sub" id="kProv"></span></h2>
+        <div class="kpis">
+          <div class="kpi"><b id="kSites">–</b><span id="kSitesLbl">sites</span></div>
+          <div class="kpi"><b id="kPairs">–</b><span>site pairs within <span id="kPairsR">20</span> km</span></div>
+          <div class="kpi"><b id="kNN">–</b><span>median nearest-site spacing</span></div>
+        </div>
+      </section>
+      <section class="block" id="inspector">
+        <h2>Location</h2>
+        <div class="inspect-empty" id="inspectEmpty">Click anywhere on the map, or search above, to see the predicted signal at that point and the sites serving it.</div>
+        <div id="inspectBody" hidden>
+          <div class="place" id="iPlace"></div>
+          <div class="coords"><span id="iCoords"></span><button type="button" id="copyCoords">Copy</button></div>
+          <table class="pcmp" aria-label="Predicted signal by provider"><tbody id="iCompare"></tbody></table>
+          <div class="signal"><b id="iSignal">–</b><small><span id="iProvName"></span> dBm predicted<br>at <span id="iFreq"></span> MHz</small><span class="chip" id="iChip"><i></i><span id="iBand"></span></span></div>
+          <table class="sites" aria-label="Nearest sites">
+            <thead><tr><th>Site</th><th>Dist km</th><th>Bearing</th><th>Loss dB</th><th>Rx dBm</th></tr></thead>
+            <tbody id="iSites"></tbody>
+          </table>
+          <p class="foot" id="iNote" style="margin:8px 0 0"></p>
+        </div>
+      </section>
+      <section class="block">
+        <h2>Propagation model</h2>
+        <div class="field"><label for="freq">Frequency band</label><output id="freqOut"></output>
+          <select id="freq">
+            <option value="700">700 MHz (Band 12/13/17)</option>
+            <option value="850" selected>850 MHz (Band 5)</option>
+            <option value="1900">1900 MHz (Band 2)</option>
+            <option value="2100">2100 MHz (Band 4/66)</option>
+            <option value="2600">2600 MHz (Band 7)</option>
+          </select></div>
+        <div class="field"><label for="env">Environment</label><output></output>
+          <select id="env">
+            <option value="urban">Urban (Hata base)</option>
+            <option value="suburban" selected>Suburban</option>
+            <option value="rural">Rural / open</option>
+          </select></div>
+        <div class="field"><label for="eirp">Site EIRP</label><output id="eirpOut"></output><input id="eirp" type="range" min="40" max="66" step="1" value="58"></div>
+        <div class="field"><label for="hb">Site antenna height</label><output id="hbOut"></output><input id="hb" type="range" min="10" max="90" step="5" value="30"></div>
+        <div class="field"><label for="hm">Mobile height</label><output id="hmOut"></output><input id="hm" type="range" min="1" max="10" step="0.5" value="1.5"></div>
+        <div class="field"><label for="range">Max serving range</label><output id="rangeOut"></output><input id="range" type="range" min="5" max="30" step="1" value="20"></div>
+        <div class="field"><label for="opacity">Overlay opacity</label><output id="opacityOut"></output><input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.72"></div>
+        <label class="toggle"><span>Show site markers (zoom 10+)</span><input type="checkbox" id="showSites" checked></label>
+        <label class="toggle"><span>Show serving-range ring on selected site</span><input type="checkbox" id="showRing" checked></label>
+      </section>
+      <section class="block">
+        <h2>Signal bands</h2>
+        <div class="legend" id="legend"></div>
+      </section>
+      <section class="block">
+        <p class="foot">Received level = EIRP − path loss, where path loss is the larger of free-space loss and Okumura-Hata (COST-231 Hata above 1500 MHz) for the given band, environment and antenna heights. Nearest site is assumed to serve. Flat terrain: no clutter or elevation profile is applied, so treat this as a planning-grade estimate, not a drive-test result. Basemap: Natural Earth. Gazetteer: GeoNames.</p>
+      </section>
+    </aside>
+    <div class="mapwrap">
+      <div id="map" role="application" aria-label="Coverage map"></div>
+      <div class="status" id="status"><span class="dot"></span><span id="statusText">Loading basemap…</span></div>
+      <div class="maplegend" id="mapLegend" aria-hidden="true"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------- model ----------
+const BANDS = [
+  {key:5, name:'Excellent', min:-80,  var:'--sig-5', desc:'≥ −80'},
+  {key:4, name:'Good',      min:-90,  var:'--sig-4', desc:'−80 to −90'},
+  {key:3, name:'Fair',      min:-100, var:'--sig-3', desc:'−90 to −100'},
+  {key:2, name:'Weak',      min:-110, var:'--sig-2', desc:'−100 to −110'},
+  {key:1, name:'Marginal',  min:-120, var:'--sig-1', desc:'−110 to −120'},
+];
+const settings = { f:850, env:'suburban', eirp:58, hb:30, hm:1.5, range:20, opacity:0.72, showSites:true, showRing:true, coverage:true, provider:'all' };
+try { const p = localStorage.getItem('atlas.provider'); if (p) settings.provider = p; } catch(e){}
+
+function fspl(dkm, f){ return 20*Math.log10(Math.max(dkm,0.001)) + 20*Math.log10(f) + 32.44; }
+function hata(dkm, f, hb, hm, env){
+  const lf = Math.log10(f), lhb = Math.log10(hb), ld = Math.log10(Math.max(dkm,0.02));
+  const ahm = (1.1*lf - 0.7)*hm - (1.56*lf - 0.8);
+  let L;
+  if (f <= 1500){
+    L = 69.55 + 26.16*lf - 13.82*lhb - ahm + (44.9 - 6.55*lhb)*ld;
+    if (env==='suburban') L -= 2*Math.pow(Math.log10(f/28),2) + 5.4;
+    else if (env==='rural') L -= 4.78*lf*lf - 18.33*lf + 40.94;
+  } else {
+    L = 46.3 + 33.9*lf - 13.82*lhb - ahm + (44.9 - 6.55*lhb)*ld;
+    if (env==='urban') L += 3; else if (env==='rural') L -= 8;
+  }
+  return L;
+}
+function pathLoss(dkm){ return Math.max(fspl(dkm, settings.f), hata(dkm, settings.f, settings.hb, settings.hm, settings.env)); }
+function rx(dkm){ return settings.eirp - pathLoss(dkm); }
+function bandOf(dbm){ for (const b of BANDS) if (dbm >= b.min) return b; return null; }
+
+// Distance (km) at which rx falls below each band threshold → lets the raster be coloured from nearest-site distance alone.
+function bandRadii(){
+  const out = [];
+  for (const b of BANDS){
+    let lo=0.01, hi=settings.range;
+    if (rx(hi) >= b.min){ out.push(hi); continue; }
+    if (rx(lo) < b.min){ out.push(0); continue; }
+    for (let i=0;i<40;i++){ const m=(lo+hi)/2; if (rx(m) >= b.min) lo=m; else hi=m; }
+    out.push(lo);
+  }
+  return out; // km, descending radius per band index
+}
+
+// ---------- data ----------
+let towers = [];        // [lat, lon, id, providerMask]
+let towerMeta = {sample:false, source:''};
+let providers = [];     // [{key, name, bit}]
+let places = [];
+let basemap = null;
+const CELL = 0.1;       // degrees, spatial hash cell
+const grids = {};       // provider key -> Map(cell -> [tower index]); 'all' holds every site
+function gkey(iy, ix){ return iy*100000 + ix; }
+function buildIndex(){
+  for (const k of Object.keys(grids)) delete grids[k];
+  grids.all = new Map();
+  for (const p of providers) grids[p.key] = new Map();
+  const put = (g, k, i) => { let a=g.get(k); if(!a){a=[];g.set(k,a);} a.push(i); };
+  towers.forEach((t,i)=>{
+    const k = gkey(Math.floor(t[0]/CELL), Math.floor(t[1]/CELL));
+    put(grids.all, k, i);
+    for (const p of providers) if (t[3] & p.bit) put(grids[p.key], k, i);
+  });
+}
+const curGrid = () => grids[settings.provider] || grids.all;
+const curProv = () => providers.find(p=>p.key===settings.provider) || null;
+const provColor = key => `var(--p-${key})`;
+const provNames = mask => providers.filter(p=>mask & p.bit).map(p=>p.name).join(' + ') || '—';
+const KM_LAT = 111.32;
+function nearest(lat, lon, rkm, maxN, grid){
+  grid = grid || curGrid();
+  const coslat = Math.cos(lat*Math.PI/180);
+  const dLatC = Math.ceil(rkm/KM_LAT/CELL), dLonC = Math.ceil(rkm/(KM_LAT*Math.max(coslat,0.05))/CELL);
+  const cy = Math.floor(lat/CELL), cx = Math.floor(lon/CELL);
+  const res = [];
+  for (let iy=cy-dLatC; iy<=cy+dLatC; iy++) for (let ix=cx-dLonC; ix<=cx+dLonC; ix++){
+    const a = grid.get(gkey(iy,ix)); if(!a) continue;
+    for (const i of a){ const t=towers[i]; const dy=(t[0]-lat)*KM_LAT, dx=(t[1]-lon)*KM_LAT*coslat; const d=Math.sqrt(dx*dx+dy*dy); if (d<=rkm) res.push([d,i]); }
+  }
+  res.sort((p,q)=>p[0]-q[0]);
+  return maxN ? res.slice(0,maxN) : res;
+}
+function nearestDist(lat, lon, rkm, coslat, grid){
+  const dLatC = Math.ceil(rkm/KM_LAT/CELL), dLonC = Math.ceil(rkm/(KM_LAT*Math.max(coslat,0.05))/CELL);
+  const cy = Math.floor(lat/CELL), cx = Math.floor(lon/CELL);
+  let best = Infinity;
+  for (let iy=cy-dLatC; iy<=cy+dLatC; iy++) for (let ix=cx-dLonC; ix<=cx+dLonC; ix++){
+    const a = grid.get(gkey(iy,ix)); if(!a) continue;
+    for (let j=0;j<a.length;j++){ const t=towers[a[j]]; const dy=(t[0]-lat)*KM_LAT, dx=(t[1]-lon)*KM_LAT*coslat; const d2=dx*dx+dy*dy; if (d2<best) best=d2; }
+  }
+  return Math.sqrt(best);
+}
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371, toR=Math.PI/180, dLat=(lat2-lat1)*toR, dLon=(lon2-lon1)*toR;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*toR)*Math.cos(lat2*toR)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function bearing(lat1,lon1,lat2,lon2){
+  const toR=Math.PI/180, y=Math.sin((lon2-lon1)*toR)*Math.cos(lat2*toR);
+  const x=Math.cos(lat1*toR)*Math.sin(lat2*toR)-Math.sin(lat1*toR)*Math.cos(lat2*toR)*Math.cos((lon2-lon1)*toR);
+  return ((Math.atan2(y,x)*180/Math.PI)+360)%360;
+}
+const COMPASS=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+const compass = b => COMPASS[Math.round(b/22.5)%16];
+
+// ---------- map ----------
+const map = L.map('map', { preferCanvas:true, zoomControl:false, worldCopyJump:false, minZoom:3, maxZoom:15, attributionControl:false });
+L.control.zoom({position:'topright'}).addTo(map);
+L.control.scale({position:'bottomleft', imperial:false}).addTo(map);
+map.createPane('urban').style.zIndex = 310;
+map.createPane('water').style.zIndex = 320;
+map.createPane('roads').style.zIndex = 330;
+map.createPane('coverage').style.zIndex = 360;
+map.createPane('coverage').style.pointerEvents = 'none';
+map.createPane('sites').style.zIndex = 420;
+map.createPane('labels').style.zIndex = 650;
+map.createPane('labels').style.pointerEvents = 'none';
+const baseRenderer = L.canvas({padding:0.4});
+const roadRenderer = L.canvas({padding:0.4, pane:'roads'});
+const waterRenderer = L.canvas({padding:0.4, pane:'water'});
+const urbanRenderer = L.canvas({padding:0.4, pane:'urban'});
+const siteRenderer = L.canvas({padding:0.3, pane:'sites'});
+
+let savedView = null;
+try { savedView = JSON.parse(localStorage.getItem('atlas.view')||'null'); } catch(e){}
+map.setView(savedView ? [savedView.lat, savedView.lng] : [56.5, -96], savedView ? savedView.z : 4);
+map.on('moveend', ()=>{ try{ const c=map.getCenter(); localStorage.setItem('atlas.view', JSON.stringify({lat:c.lat,lng:c.lng,z:map.getZoom()})); }catch(e){} });
+
+const layers = {};
+function styleLand(f){ return {renderer:baseRenderer, stroke:true, color:css('--border'), weight:0.8, fillColor: f.properties.c==='CAN'?css('--land'):css('--land-out'), fillOpacity:1, interactive:false}; }
+function restyleBase(){
+  if (!basemap) return;
+  layers.land.setStyle(styleLand);
+  layers.countries.setStyle({color:css('--border'), fillColor:css('--land-out')});
+  layers.lakes.setStyle({color:css('--water'), fillColor:css('--water')});
+  layers.rivers.setStyle({color:css('--river')});
+  layers.roadsMajor.setStyle({color:css('--road-major')});
+  layers.roadsMinor.setStyle({color:css('--road')});
+  layers.urban.setStyle({fillColor:css('--urban')});
+  renderCoverage();
+}
+function fc(items, propsFn){ return {type:'FeatureCollection', features: items.map(it=>({type:'Feature', properties: propsFn?propsFn(it):{}, geometry: it.g}))}; }
+function buildBasemap(){
+  layers.land = L.geoJSON(fc(basemap.admin1, it=>({c:it.c,n:it.n})), {style:styleLand, interactive:false}).addTo(map);
+  layers.countries = L.geoJSON(fc(basemap.countries), {style:{renderer:baseRenderer, color:css('--border'), weight:0.6, fillColor:css('--land-out'), fillOpacity:1}, interactive:false}).addTo(map);
+  layers.urban = L.geoJSON(fc(basemap.urban), {style:{renderer:urbanRenderer, stroke:false, fillColor:css('--urban'), fillOpacity:1}, interactive:false});
+  layers.lakes = L.geoJSON(fc(basemap.lakes), {style:{renderer:waterRenderer, color:css('--water'), weight:0.5, fillColor:css('--water'), fillOpacity:1}, interactive:false}).addTo(map);
+  layers.rivers = L.geoJSON(fc(basemap.rivers), {style:{renderer:waterRenderer, color:css('--river'), weight:1}, interactive:false});
+  const major = basemap.roads.filter(r=>r.s<=5), minor = basemap.roads.filter(r=>r.s>5);
+  layers.roadsMajor = L.geoJSON(fc(major), {style:{renderer:roadRenderer, color:css('--road-major'), weight:1.4}, interactive:false});
+  layers.roadsMinor = L.geoJSON(fc(minor), {style:{renderer:roadRenderer, color:css('--road'), weight:0.9}, interactive:false});
+  layers.labels = L.layerGroup().addTo(map);
+  updateZoomLayers();
+}
+function updateZoomLayers(){
+  if (!basemap) return;
+  const z = map.getZoom();
+  const want = (layer, on) => { if (on && !map.hasLayer(layer)) layer.addTo(map); else if (!on && map.hasLayer(layer)) map.removeLayer(layer); };
+  want(layers.rivers, z>=5);
+  want(layers.roadsMajor, z>=6);
+  want(layers.roadsMinor, z>=8);
+  want(layers.urban, z>=7);
+  layers.roadsMajor.setStyle({weight: z>=10?2.2: z>=8?1.8:1.3});
+}
+
+// labels
+function updateLabels(){
+  if (!basemap) return;
+  layers.labels.clearLayers();
+  const z = map.getZoom(), b = map.getBounds().pad(0.1);
+  const placed = [];
+  const okPx = (pt, w) => placed.every(p => Math.abs(p.x-pt.x) > (w+p.w)/2 + 6 || Math.abs(p.y-pt.y) > 16);
+  if (z <= 6){
+    for (const l of basemap.labels){ if (!b.contains([l.lat,l.lon])) continue; L.marker([l.lat,l.lon],{pane:'labels', interactive:false, icon:L.divIcon({className:'lbl prov', html:l.n, iconSize:null})}).addTo(layers.labels); }
+  }
+  const minPop = z<=4?400000 : z<=5?150000 : z<=6?60000 : z<=7?20000 : z<=8?8000 : z<=9?2500 : z<=10?800 : 0;
+  let count = 0;
+  for (const p of places){
+    if (p.p < minPop) break;
+    if (!b.contains([p.lat,p.lon])) continue;
+    const pt = map.latLngToContainerPoint([p.lat,p.lon]);
+    const w = p.n.length*6.5 + 12;
+    if (!okPx(pt,w)) continue;
+    placed.push({x:pt.x,y:pt.y,w});
+    const big = p.p >= 500000 || (z>=7 && p.p>=100000);
+    L.marker([p.lat,p.lon],{pane:'labels', interactive:false, icon:L.divIcon({className:'lbl city'+(big?' big':''), html:p.n, iconSize:null, iconAnchor:[-4,8]})}).addTo(layers.labels);
+    if (++count > 60) break;
+  }
+}
+
+// coverage raster
+let overlay = null, computeToken = 0;
+const status = $('status'), statusText = $('statusText');
+function setStatus(text, busy){ statusText.textContent = text; status.classList.toggle('busy', !!busy); }
+function renderCoverage(){
+  if (!towers.length) return;
+  if (!settings.coverage){ if (overlay){ map.removeLayer(overlay); overlay=null; } setStatus('Coverage overlay off'); return; }
+  const token = ++computeToken;
+  setStatus('Computing coverage…', true);
+  requestAnimationFrame(()=>{
+    if (token !== computeToken) return;
+    const size = map.getSize(), z = map.getZoom();
+    const cellPx = size.x*size.y > 1.4e6 ? 6 : 4;
+    const w = Math.ceil(size.x/cellPx), h = Math.ceil(size.y/cellPx);
+    const canvas = document.createElement('canvas'); canvas.width=w; canvas.height=h;
+    const ctx = canvas.getContext('2d'); const img = ctx.createImageData(w,h); const px = img.data;
+    const radii = bandRadii();
+    const cols = BANDS.map(b => { const c=css(b.var); const m=c.match(/^#([0-9a-f]{6})$/i); const v=parseInt(m[1],16); return [(v>>16)&255,(v>>8)&255,v&255]; });
+    const nw = map.containerPointToLatLng([0,0]), se = map.containerPointToLatLng([size.x,size.y]);
+    const bounds = L.latLngBounds(nw, se);
+    const topLeft = map.project(nw, z);
+    const lon0 = nw.lng, dLonPx = (se.lng - nw.lng) / size.x;   // longitude is linear in x under Web Mercator
+    const R = settings.range, grid = curGrid();
+    let y=0;
+    const step = () => {
+      const t0 = performance.now();
+      for (; y<h && performance.now()-t0 < 24; y++){
+        const latLng = map.unproject(L.point(topLeft.x, topLeft.y + (y+0.5)*cellPx), z);
+        const lat = latLng.lat, coslat = Math.cos(lat*Math.PI/180);
+        for (let x=0; x<w; x++){
+          const lon = lon0 + (x+0.5)*cellPx*dLonPx;
+          const d = nearestDist(lat, lon, R, coslat, grid);
+          if (d > R) continue;
+          let bi = -1; for (let i=0;i<radii.length;i++){ if (d <= radii[i]) { bi=i; break; } }
+          if (bi<0) continue;
+          const o = (y*w+x)*4, c = cols[bi];
+          px[o]=c[0]; px[o+1]=c[1]; px[o+2]=c[2]; px[o+3]=235;
+        }
+      }
+      if (token !== computeToken) return;
+      if (y < h){ setTimeout(step, 0); return; }
+      ctx.putImageData(img,0,0);
+      const url = canvas.toDataURL();
+      const next = L.imageOverlay(url, bounds, {pane:'coverage', opacity:settings.opacity, interactive:false, className:'cov'});
+      next.addTo(map);
+      if (overlay) map.removeLayer(overlay);
+      overlay = next;
+      const pv = curProv();
+      setStatus(`${pv ? pv.name : 'All providers'} · ${settings.f} MHz · ${settings.env} · ${R} km range`);
+    };
+    step();
+  });
+}
+
+// site markers
+const siteGroup = L.layerGroup().addTo(map);
+let ring = null, selectedSite = null;
+function renderSites(){
+  siteGroup.clearLayers();
+  if (!settings.showSites || map.getZoom() < 10 || !towers.length) return;
+  const b = map.getBounds().pad(0.05);
+  const z = map.getZoom(), r = z>=13?5: z>=11?3.5:2.5;
+  const pv = curProv(), colors = {}; for (const p of providers) colors[p.key] = css('--p-'+p.key);
+  const colorFor = mask => { if (pv) return colors[pv.key]; const p = providers.find(p=>mask & p.bit); return p ? colors[p.key] : css('--accent'); };
+  const shared = mask => (mask & (mask-1)) !== 0;   // more than one provider bit set
+  let n=0;
+  for (let i=0;i<towers.length;i++){
+    const t=towers[i]; if (!b.contains([t[0],t[1]])) continue;
+    if (pv && !(t[3] & pv.bit)) continue;
+    const m = L.circleMarker([t[0],t[1]], {renderer:siteRenderer, pane:'sites', radius:r, color: shared(t[3]) ? css('--fg') : '#fff', weight: shared(t[3]) ? 1.6 : 1.2, fillColor:colorFor(t[3]), fillOpacity:0.95});
+    m.on('click', e => { L.DomEvent.stop(e); selectSite(i); });
+    m.addTo(siteGroup);
+    if (++n > 4000) break;
+  }
+}
+function selectSite(i){
+  const t = towers[i];
+  selectedSite = i;
+  const nb = nearest(t[0], t[1], settings.range).filter(p=>p[1]!==i);
+  const pv = curProv();
+  const html = `<b>Site ${t[2]}</b><br><span style="color:var(--muted)">${provNames(t[3])}</span><br>${t[0].toFixed(5)}, ${t[1].toFixed(5)}<br>${nb.length} other ${pv ? pv.name+' ' : ''}site${nb.length===1?'':'s'} within ${settings.range} km` + (nb.length?`<br>Nearest: site ${towers[nb[0][1]][2]} at ${nb[0][0].toFixed(2)} km`:'');
+  L.popup({offset:[0,-4]}).setLatLng([t[0],t[1]]).setContent(html).openOn(map);
+  drawRing();
+}
+function drawRing(){
+  if (ring){ map.removeLayer(ring); ring=null; }
+  if (selectedSite==null || !settings.showRing) return;
+  const t = towers[selectedSite];
+  ring = L.circle([t[0],t[1]], {radius:settings.range*1000, pane:'sites', renderer:siteRenderer, color:css('--accent'), weight:1.5, dashArray:'6 5', fill:false, interactive:false}).addTo(map);
+}
+map.on('popupclose', ()=>{ selectedSite=null; drawRing(); });
+
+// inspector
+let pin = null, inspected = null;
+function inspect(lat, lon, label){
+  inspected = {lat, lon, label};
+  if (!pin) pin = L.marker([lat,lon], {pane:'markerPane', icon:L.divIcon({className:'', html:'<div class="pin"></div>', iconSize:[18,18], iconAnchor:[3,18]})}).addTo(map);
+  pin.setLatLng([lat,lon]);
+  $('inspectEmpty').hidden = true; $('inspectBody').hidden = false;
+  const near = nearest(lat, lon, Math.max(settings.range, 40), 6);
+  const bestPlace = nearestPlace(lat, lon);
+  $('iPlace').textContent = label || (bestPlace ? `${bestPlace.d < 3 ? '' : 'Near '}${bestPlace.p.n}, ${bestPlace.p.a}` : 'Selected location');
+  $('iCoords').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  $('iFreq').textContent = settings.f;
+  const pv = curProv();
+  $('iProvName').textContent = pv ? pv.name : 'Best of all providers';
+  // provider comparison: best server per provider at this point
+  const cmp = $('iCompare'); cmp.innerHTML = '';
+  for (const p of providers){
+    const nn = nearest(lat, lon, settings.range, 1, grids[p.key]);
+    const tr = document.createElement('tr'); if (pv && pv.key===p.key) tr.className = 'sel';
+    if (!nn.length){
+      tr.innerHTML = `<td><i style="background:${provColor(p.key)}"></i>${p.name}</td><td class="none" colspan="2">no site within ${settings.range} km</td><td class="bar"><div></div></td>`;
+    } else {
+      const t = towers[nn[0][1]]; const d = haversine(lat,lon,t[0],t[1]); const s = rx(d); const b = bandOf(s);
+      const pct = Math.max(0, Math.min(100, (s + 125) / 60 * 100));
+      tr.innerHTML = `<td><i style="background:${provColor(p.key)}"></i>${p.name}</td><td>${s.toFixed(0)} dBm</td><td>${d.toFixed(1)} km</td><td class="bar"><div><i style="width:${pct.toFixed(0)}%;background:${b?`var(${b.var})`:'var(--line)'}"></i></div></td>`;
+    }
+    tr.style.cursor = 'pointer'; tr.title = `Show ${p.name} coverage`;
+    tr.addEventListener('click', ()=>setProvider(p.key));
+    cmp.appendChild(tr);
+  }
+  const tb = $('iSites'); tb.innerHTML = '';
+  if (!near.length || near[0][0] > settings.range){
+    $('iSignal').textContent = '—';
+    $('iChip').style.background = 'var(--muted)'; $('iBand').textContent = 'No service';
+    $('iNote').textContent = near.length ? `Nearest site is ${near[0][0].toFixed(1)} km away, beyond the ${settings.range} km serving range.` : `No site within 40 km.`;
+  } else {
+    const d0 = haversine(lat,lon,towers[near[0][1]][0],towers[near[0][1]][1]);
+    const s = rx(d0), b = bandOf(s);
+    $('iSignal').textContent = s.toFixed(0);
+    $('iChip').style.background = b ? `var(${b.var})` : 'var(--muted)'; $('iBand').textContent = b ? b.name : 'No service';
+    near.forEach((p, idx) => {
+      const t = towers[p[1]]; const d = haversine(lat,lon,t[0],t[1]); const L_ = pathLoss(d); const r = settings.eirp - L_; const br = bearing(lat,lon,t[0],t[1]);
+      const tr = document.createElement('tr'); if (idx===0) tr.className='best';
+      const bb = bandOf(r);
+      tr.innerHTML = `<td><span class="swatch" style="background:${bb?`var(${bb.var})`:'var(--line)'}"></span>${t[2]}${pv ? '' : ` <span style="color:var(--muted);font-weight:400">${provNames(t[3])}</span>`}</td><td>${d.toFixed(2)}</td><td>${br.toFixed(0)}° ${compass(br)}</td><td>${L_.toFixed(1)}</td><td>${r.toFixed(0)}</td>`;
+      tr.style.cursor='pointer'; tr.title='Zoom to this site';
+      tr.addEventListener('click', ()=>{ map.flyTo([t[0],t[1]], Math.max(map.getZoom(),12)); selectSite(p[1]); });
+      tb.appendChild(tr);
+    });
+    const inRange = nearest(lat, lon, settings.range).length;
+    $('iNote').textContent = `${inRange} ${pv ? pv.name+' ' : ''}site${inRange===1?'':'s'} within ${settings.range} km. Best server is the nearest site; rows are the closest ${near.length}.`;
+  }
+}
+function nearestPlace(lat, lon){
+  let best=null, bd=Infinity; const coslat=Math.cos(lat*Math.PI/180);
+  for (const p of places){ const dy=(p.lat-lat)*KM_LAT, dx=(p.lon-lon)*KM_LAT*coslat; const d=Math.sqrt(dx*dx+dy*dy) - Math.log10(p.p+10)*2; if (d<bd){bd=d;best=p;} }
+  return best ? {p:best, d: haversine(lat,lon,best.lat,best.lon)} : null;
+}
+map.on('click', e => inspect(e.latlng.lat, e.latlng.lng));
+$('copyCoords').addEventListener('click', async ()=>{
+  const txt = $('iCoords').textContent;
+  try { await navigator.clipboard.writeText(txt); $('copyCoords').textContent='Copied'; }
+  catch(e){ const r=document.createRange(); r.selectNodeContents($('iCoords')); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $('copyCoords').textContent='Selected'; }
+  setTimeout(()=>$('copyCoords').textContent='Copy', 1400);
+});
+
+// ---------- search ----------
+const q = $('q'), results = $('results');
+let activeIdx = -1, current = [];
+function parseCoords(s){
+  s = s.trim().replace(/[，;]/g, ',');
+  const dec = s.match(/^(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)$/);
+  if (dec){ return fix(parseFloat(dec[1]), parseFloat(dec[2])); }
+  const part = /([NSEW])?\s*(-?\d+(?:\.\d+)?)\s*[°º\s]?\s*(?:(\d+(?:\.\d+)?)\s*['′’\s])?\s*(?:(\d+(?:\.\d+)?)\s*["″”]?)?\s*([NSEW])?/gi;
+  const found = [];
+  let m; while ((m = part.exec(s)) && found.length < 2){
+    if (m[0].trim()==='') { part.lastIndex++; continue; }
+    let v = Math.abs(parseFloat(m[2])) + (m[3]?parseFloat(m[3])/60:0) + (m[4]?parseFloat(m[4])/3600:0);
+    const hemi = (m[1]||m[5]||'').toUpperCase();
+    if (parseFloat(m[2]) < 0 || hemi==='S' || hemi==='W') v = -v;
+    found.push({v, hemi});
+  }
+  if (found.length===2){
+    let lat = found[0], lon = found[1];
+    if (/[EW]/.test(lat.hemi) || /[NS]/.test(lon.hemi)) [lat, lon] = [lon, lat];
+    return fix(lat.v, lon.v);
+  }
+  return null;
+  function fix(lat, lon){
+    if (Math.abs(lat) > 90 && Math.abs(lon) <= 90) [lat, lon] = [lon, lat];
+    let note = '';
+    if (lon > 0 && lon <= 180 && lat > 40 && lat < 84){ lon = -lon; note = 'Longitude read as West'; }
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    return {lat, lon, note};
+  }
+}
+function norm(s){ return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/^(st|ste)\.?\s/,'saint-').replace(/\s+/g,' ').trim(); }
+function searchPlaces(text){
+  const n = norm(text).replace(/,.*$/,''); if (!n) return [];
+  const prov = (text.match(/,\s*([A-Za-z]{2})\s*$/)||[])[1];
+  const starts=[], has=[];
+  for (const p of places){
+    const pn = norm(p.n);
+    if (prov && p.a !== prov.toUpperCase()) continue;
+    if (pn.startsWith(n)) starts.push(p); else if (pn.includes(n)) has.push(p);
+    if (starts.length > 30) break;
+  }
+  return starts.concat(has).slice(0,8);
+}
+function showResults(items){
+  current = items; activeIdx = -1; results.innerHTML='';
+  if (!items.length){ results.hidden = true; return; }
+  items.forEach((it, i) => {
+    const b = document.createElement('button'); b.type='button'; b.setAttribute('role','option');
+    b.innerHTML = `<span>${it.label}</span><span class="kind">${it.kind}</span>`;
+    b.addEventListener('click', ()=>choose(it));
+    results.appendChild(b);
+  });
+  results.hidden = false;
+}
+function buildItems(text){
+  const t = text.trim(); if (!t) return [];
+  const c = parseCoords(t);
+  const items = [];
+  if (c) items.push({kind:'coordinates', label:`${c.lat.toFixed(5)}, ${c.lon.toFixed(5)}${c.note?' · '+c.note:''}`, lat:c.lat, lon:c.lon, zoom:13});
+  for (const p of searchPlaces(t)) items.push({kind:p.a||'place', label:`${p.n}${p.a?', '+p.a:''}`, lat:p.lat, lon:p.lon, zoom: p.p>200000?11 : p.p>20000?12 : 13, name:`${p.n}, ${p.a}`});
+  return items;
+}
+function choose(it){
+  results.hidden = true; q.value = it.label.replace(/ · .*$/,''); q.blur();
+  map.flyTo([it.lat, it.lon], it.zoom, {duration:0.9});
+  map.once('moveend', ()=>inspect(it.lat, it.lon, it.name));
+}
+q.addEventListener('input', ()=>{
+  const t = q.value;
+  if (!t.trim()){ results.hidden = true; return; }
+  const items = buildItems(t);
+  if (!items.length){
+    results.innerHTML = `<div class="hint">${/^[A-Za-z]\d[A-Za-z]\s?\d[A-Za-z]\d$/.test(t.trim()) ? 'Postal-code lookup is not bundled yet. Search the city or town, or paste coordinates.' : 'No matching city or town. Street addresses are not geocoded in this build: try the town name (e.g. “Surrey, BC”) or coordinates (“49.0925, -122.6101”).'}</div>`;
+    results.hidden = false; current = []; return;
+  }
+  showResults(items);
+});
+q.addEventListener('keydown', e => {
+  if (results.hidden || !current.length) return;
+  if (e.key==='ArrowDown' || e.key==='ArrowUp'){
+    e.preventDefault(); activeIdx = (activeIdx + (e.key==='ArrowDown'?1:-1) + current.length) % current.length;
+    [...results.children].forEach((el,i)=>el.classList.toggle('active', i===activeIdx));
+  } else if (e.key==='Escape'){ results.hidden = true; }
+});
+$('searchForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const items = current.length ? current : buildItems(q.value);
+  if (!items.length) return;
+  choose(items[activeIdx >= 0 ? activeIdx : 0]);
+});
+document.addEventListener('click', e => { if (!e.target.closest('.search')) results.hidden = true; });
+
+// ---------- controls ----------
+function bindRange(id, key, fmt){
+  const el = $(id), out = $(id+'Out');
+  const upd = () => { settings[key] = parseFloat(el.value); out.textContent = fmt(settings[key]); };
+  el.addEventListener('input', upd);
+  el.addEventListener('change', ()=>{ upd(); afterModelChange(); });
+  upd();
+}
+bindRange('eirp','eirp', v=>`${v} dBm`);
+bindRange('hb','hb', v=>`${v} m`);
+bindRange('hm','hm', v=>`${v} m`);
+bindRange('range','range', v=>`${v} km`);
+bindRange('opacity','opacity', v=>`${Math.round(v*100)} %`);
+$('opacity').addEventListener('input', ()=>{ if (overlay) overlay.setOpacity(settings.opacity); });
+$('freq').addEventListener('change', ()=>{ settings.f = parseInt($('freq').value,10); afterModelChange(); });
+$('env').addEventListener('change', ()=>{ settings.env = $('env').value; afterModelChange(); });
+$('showSites').addEventListener('change', ()=>{ settings.showSites = $('showSites').checked; renderSites(); });
+$('showRing').addEventListener('change', ()=>{ settings.showRing = $('showRing').checked; drawRing(); });
+$('toggleCoverage').addEventListener('click', ()=>{ settings.coverage = !settings.coverage; $('toggleCoverage').setAttribute('aria-pressed', settings.coverage); renderCoverage(); });
+$('toggleRail').addEventListener('click', ()=>{
+  const rail = $('rail'); rail.hidden = !rail.hidden; $('work').classList.toggle('rail-hidden', rail.hidden);
+  $('toggleRail').setAttribute('aria-pressed', !rail.hidden); setTimeout(()=>map.invalidateSize(), 50);
+});
+function afterModelChange(){
+  renderLegend(); renderCoverage(); drawRing();
+  $('kPairsR').textContent = settings.range; schedulePairs();
+  if (inspected) inspect(inspected.lat, inspected.lon, inspected.label);
+}
+function renderProviderBar(){
+  const bar = $('providers'); bar.innerHTML = '';
+  const items = providers.map(p=>({key:p.key, name:p.name})).concat([{key:'all', name:'All'}]);
+  for (const it of items){
+    const b = document.createElement('button'); b.type = 'button';
+    b.style.setProperty('--pc', provColor(it.key));
+    b.setAttribute('aria-pressed', settings.provider === it.key);
+    b.innerHTML = `<i></i>${it.name}`;
+    b.addEventListener('click', ()=>setProvider(it.key));
+    bar.appendChild(b);
+  }
+}
+function setProvider(key){
+  if (!grids[key]) key = 'all';
+  settings.provider = key;
+  try { localStorage.setItem('atlas.provider', key); } catch(e){}
+  renderProviderBar();
+  const pv = curProv();
+  $('kProv').textContent = pv ? pv.name : 'All providers';
+  $('kSitesLbl').textContent = pv ? `${pv.name} sites` : 'sites, all providers';
+  map.closePopup();
+  renderSites(); renderCoverage(); schedulePairs();
+  if (inspected) inspect(inspected.lat, inspected.lon, inspected.label);
+}
+function renderLegend(){
+  const radii = bandRadii();
+  $('legend').innerHTML = BANDS.map((b,i)=>`<div class="row"><i style="background:var(${b.var})"></i><span>${b.name} <span style="color:var(--muted)">${b.desc} dBm</span></span><span>≤ ${radii[i] >= settings.range ? settings.range+'+' : radii[i].toFixed(1)} km</span></div>`).join('') +
+    `<div class="row"><i style="background:transparent;border:1px dashed var(--border)"></i><span>No service <span style="color:var(--muted)">&lt; −120 dBm or beyond range</span></span><span></span></div>`;
+  $('mapLegend').innerHTML = BANDS.map(b=>`<div class="b"><i style="background:var(${b.var})"></i>${b.min}</div>`).join('') + `<div class="b"><i style="background:transparent;border:1px dashed var(--border)"></i>dBm</div>`;
+}
+
+// network KPIs (ties back to the 20 km pair analysis)
+let pairsTimer = null;
+function schedulePairs(){ clearTimeout(pairsTimer); pairsTimer = setTimeout(computePairs, 300); }
+function computePairs(){
+  if (!towers.length) return;
+  const R = settings.range, grid = curGrid(), pv = curProv(); let pairs = 0, count = 0; const nn = [];
+  for (let i=0;i<towers.length;i++){
+    const t = towers[i]; if (pv && !(t[3] & pv.bit)) continue;
+    count++;
+    const coslat = Math.cos(t[0]*Math.PI/180);
+    const dLatC = Math.ceil(R/KM_LAT/CELL), dLonC = Math.ceil(R/(KM_LAT*Math.max(coslat,0.05))/CELL);
+    const cy = Math.floor(t[0]/CELL), cx = Math.floor(t[1]/CELL); let best = Infinity;
+    for (let iy=cy-dLatC; iy<=cy+dLatC; iy++) for (let ix=cx-dLonC; ix<=cx+dLonC; ix++){
+      const a = grid.get(gkey(iy,ix)); if(!a) continue;
+      for (const j of a){ if (j===i) continue; const u=towers[j]; const dy=(u[0]-t[0])*KM_LAT, dx=(u[1]-t[1])*KM_LAT*coslat; const d=Math.sqrt(dx*dx+dy*dy); if (d<=R){ if (j>i) pairs++; if (d<best) best=d; } }
+    }
+    if (isFinite(best)) nn.push(best);
+  }
+  const finite = nn.sort((a,b)=>a-b);
+  const compact = n => n >= 1e5 ? new Intl.NumberFormat('en', {notation:'compact', maximumFractionDigits:2}).format(n) : n.toLocaleString();
+  $('kSites').textContent = compact(count);
+  $('kPairs').textContent = compact(pairs);
+  $('kPairs').title = pairs.toLocaleString() + ' pairs';
+  $('kNN').textContent = finite.length ? finite[Math.floor(finite.length/2)].toFixed(1)+' km' : '—';
+}
+
+// ---------- boot ----------
+map.on('zoomend', ()=>{ updateZoomLayers(); });
+map.on('moveend', ()=>{ updateLabels(); renderSites(); renderCoverage(); });
+map.on('zoomstart', ()=>{ computeToken++; });
+const mq = matchMedia('(prefers-color-scheme: dark)');
+mq.addEventListener && mq.addEventListener('change', ()=>setTimeout(restyleBase, 50));
+new MutationObserver(()=>setTimeout(restyleBase, 50)).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+
+renderLegend();
+Promise.all([
+  fetch('basemap.json').then(r=>r.json()),
+  fetch('places.json').then(r=>r.json()),
+  fetch('towers.json').then(r=>r.json()),
+]).then(([bm, pl, tw])=>{
+  basemap = bm; places = pl;
+  towers = tw.towers.map(t => t.length > 3 ? t : [t[0], t[1], t[2], 1]);
+  providers = tw.providers && tw.providers.length ? tw.providers : [{key:'telus', name:'TELUS', bit:1}];
+  towerMeta = {sample: !!tw.sample, source: tw.source||''};
+  if (towerMeta.sample){ $('dataNotice').hidden = false; $('noticeText').textContent = 'These are synthetic site positions and provider assignments generated around populated places so the portal can be exercised. Re-upload the Site_Data_Extract export (with an operator column) and the real sites replace them.'; }
+  buildIndex(); buildBasemap(); updateLabels();
+  setProvider(settings.provider);
+}).catch(err => { setStatus('Could not load data files: ' + err.message); console.error(err); });
+})();
+</script>
