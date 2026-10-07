@@ -674,6 +674,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --ocean:#D8E4EE; --land:#F1EFF3; --land-out:#E8E6EC; --border:#B9B2C6; --water:#BFD3E6; --river:#A9C3DB;
   --road:#C9BFD6; --road-major:#A897BC; --urban:#E3DDE9; --label:#4A4458; --label-halo:#FFFFFF;
   --sig-5:#166534; --sig-4:#4BA300; --sig-3:#D7B600; --sig-2:#E8862B; --sig-1:#C12335;
+  --p-telus:#4B286D; --p-bell:#0B5FA5; --p-rogers:#C8102E; --p-all:#5B5566;
   --shadow:0 8px 28px rgba(43,24,66,.14);
   --font-ui:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --font-cond:"Barlow Condensed","Barlow",system-ui,sans-serif;
@@ -686,6 +687,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --ocean:#141A24; --land:#262330; --land-out:#1F1D27; --border:#5A5070; --water:#1E2E40; --river:#2F4A66;
   --road:#4B4360; --road-major:#6B5F86; --urban:#332D40; --label:#D9D2E6; --label-halo:#17141D;
   --sig-5:#1F8A46; --sig-4:#66CC00; --sig-3:#E6C62A; --sig-2:#F09A3E; --sig-1:#E05566;
+  --p-telus:#B596D8; --p-bell:#5FA8E6; --p-rogers:#F06A7A; --p-all:#A79FB5;
   --shadow:0 8px 28px rgba(0,0,0,.45);
   color-scheme:dark;
 }}
@@ -696,6 +698,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
   --ocean:#141A24; --land:#262330; --land-out:#1F1D27; --border:#5A5070; --water:#1E2E40; --river:#2F4A66;
   --road:#4B4360; --road-major:#6B5F86; --urban:#332D40; --label:#D9D2E6; --label-halo:#17141D;
   --sig-5:#1F8A46; --sig-4:#66CC00; --sig-3:#E6C62A; --sig-2:#F09A3E; --sig-1:#E05566;
+  --p-telus:#B596D8; --p-bell:#5FA8E6; --p-rogers:#F06A7A; --p-all:#A79FB5;
   --shadow:0 8px 28px rgba(0,0,0,.45);
   color-scheme:dark;
 }
@@ -724,6 +727,23 @@ header.bar{display:flex;align-items:center;gap:14px;padding:8px 16px;background:
 .results .kind{font-family:var(--font-cond);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);flex:none}
 .results .hint{padding:10px 12px;color:var(--muted);font-size:13px}
 .bar .tools{display:flex;gap:8px;margin-left:auto}
+.providers{display:inline-flex;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel-2);padding:3px;gap:2px}
+.providers button{border:0;background:transparent;border-radius:6px;padding:6px 12px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:var(--muted);white-space:nowrap}
+.providers button i{width:9px;height:9px;border-radius:50%;background:var(--pc)}
+.providers button[aria-pressed="true"]{background:var(--pc);color:#fff}
+.providers button[aria-pressed="true"] i{background:#fff}
+.providers button:hover:not([aria-pressed="true"]){color:var(--fg)}
+.pcmp{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+.pcmp td{padding:6px 6px;border-bottom:1px solid var(--line-2);text-align:right}
+.pcmp td:first-child{text-align:left;font-weight:600;padding-left:0}
+.pcmp td:first-child i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:0}
+.pcmp tr.sel td{background:var(--accent-soft)}
+.pcmp .chip{font-size:11px;padding:2px 8px}
+.pcmp .none{color:var(--muted);font-weight:500}
+.pcmp td.bar{width:34%;padding-right:0}
+.pcmp td.bar div{height:7px;border-radius:4px;background:var(--line-2);overflow:hidden}
+.pcmp td.bar div i{display:block;height:100%;border-radius:4px}
+h2 .sub{font-weight:500;letter-spacing:0;text-transform:none;color:var(--fg);margin-left:6px}
 .btn{border:1px solid var(--line);background:var(--panel-2);border-radius:var(--radius);padding:8px 12px;cursor:pointer;font-weight:600;display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
 .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -805,6 +825,8 @@ table.sites tr.best td{font-weight:600}
   aside.rail{border-right:0;border-top:1px solid var(--line);max-height:46vh;order:2}
   .mapwrap{order:1}
   .search{order:3;flex-basis:100%}
+  .providers{order:4;flex-basis:100%;justify-content:stretch}
+  .providers button{flex:1;justify-content:center;padding:6px 8px}
   .bar .tools{margin-left:auto}
   .kpis{grid-template-columns:repeat(3,1fr)}
   .maplegend{display:none}
@@ -827,6 +849,7 @@ table.sites tr.best td{font-weight:600}
       <button class="go" type="submit" aria-label="Search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
       <div class="results" id="results" hidden role="listbox"></div>
     </form>
+    <div class="providers" id="providers" role="group" aria-label="Provider"></div>
     <div class="tools">
       <button class="btn" id="toggleRail" type="button" aria-pressed="true" aria-controls="rail"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Panel</button>
       <button class="btn" id="toggleCoverage" type="button" aria-pressed="true"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 1 6 6c0 4-6 12-6 12S6 13 6 9a6 6 0 0 1 6-6Z"/><circle cx="12" cy="9" r="2"/></svg>Coverage</button>
@@ -839,9 +862,9 @@ table.sites tr.best td{font-weight:600}
         <div class="notice"><div><b>Sample sites shown.</b> <span id="noticeText"></span></div></div>
       </section>
       <section class="block">
-        <h2>Network</h2>
+        <h2>Network <span class="sub" id="kProv"></span></h2>
         <div class="kpis">
-          <div class="kpi"><b id="kSites">–</b><span>sites loaded</span></div>
+          <div class="kpi"><b id="kSites">–</b><span id="kSitesLbl">sites</span></div>
           <div class="kpi"><b id="kPairs">–</b><span>site pairs within <span id="kPairsR">20</span> km</span></div>
           <div class="kpi"><b id="kNN">–</b><span>median nearest-site spacing</span></div>
         </div>
@@ -852,7 +875,8 @@ table.sites tr.best td{font-weight:600}
         <div id="inspectBody" hidden>
           <div class="place" id="iPlace"></div>
           <div class="coords"><span id="iCoords"></span><button type="button" id="copyCoords">Copy</button></div>
-          <div class="signal"><b id="iSignal">–</b><small>dBm predicted<br>at <span id="iFreq"></span> MHz</small><span class="chip" id="iChip"><i></i><span id="iBand"></span></span></div>
+          <table class="pcmp" aria-label="Predicted signal by provider"><tbody id="iCompare"></tbody></table>
+          <div class="signal"><b id="iSignal">–</b><small><span id="iProvName"></span> dBm predicted<br>at <span id="iFreq"></span> MHz</small><span class="chip" id="iChip"><i></i><span id="iBand"></span></span></div>
           <table class="sites" aria-label="Nearest sites">
             <thead><tr><th>Site</th><th>Dist km</th><th>Bearing</th><th>Loss dB</th><th>Rx dBm</th></tr></thead>
             <tbody id="iSites"></tbody>
@@ -915,7 +939,8 @@ const BANDS = [
   {key:2, name:'Weak',      min:-110, var:'--sig-2', desc:'−100 to −110'},
   {key:1, name:'Marginal',  min:-120, var:'--sig-1', desc:'−110 to −120'},
 ];
-const settings = { f:850, env:'suburban', eirp:58, hb:30, hm:1.5, range:20, opacity:0.72, showSites:true, showRing:true, coverage:true };
+const settings = { f:850, env:'suburban', eirp:58, hb:30, hm:1.5, range:20, opacity:0.72, showSites:true, showRing:true, coverage:true, provider:'all' };
+try { const p = localStorage.getItem('atlas.provider'); if (p) settings.provider = p; } catch(e){}
 
 function fspl(dkm, f){ return 20*Math.log10(Math.max(dkm,0.001)) + 20*Math.log10(f) + 32.44; }
 function hata(dkm, f, hb, hm, env){
@@ -950,19 +975,32 @@ function bandRadii(){
 }
 
 // ---------- data ----------
-let towers = [];        // [lat, lon, id]
+let towers = [];        // [lat, lon, id, providerMask]
 let towerMeta = {sample:false, source:''};
+let providers = [];     // [{key, name, bit}]
 let places = [];
 let basemap = null;
 const CELL = 0.1;       // degrees, spatial hash cell
-const grid = new Map();
+const grids = {};       // provider key -> Map(cell -> [tower index]); 'all' holds every site
 function gkey(iy, ix){ return iy*100000 + ix; }
 function buildIndex(){
-  grid.clear();
-  towers.forEach((t,i)=>{ const k=gkey(Math.floor(t[0]/CELL), Math.floor(t[1]/CELL)); let a=grid.get(k); if(!a){a=[];grid.set(k,a);} a.push(i); });
+  for (const k of Object.keys(grids)) delete grids[k];
+  grids.all = new Map();
+  for (const p of providers) grids[p.key] = new Map();
+  const put = (g, k, i) => { let a=g.get(k); if(!a){a=[];g.set(k,a);} a.push(i); };
+  towers.forEach((t,i)=>{
+    const k = gkey(Math.floor(t[0]/CELL), Math.floor(t[1]/CELL));
+    put(grids.all, k, i);
+    for (const p of providers) if (t[3] & p.bit) put(grids[p.key], k, i);
+  });
 }
+const curGrid = () => grids[settings.provider] || grids.all;
+const curProv = () => providers.find(p=>p.key===settings.provider) || null;
+const provColor = key => `var(--p-${key})`;
+const provNames = mask => providers.filter(p=>mask & p.bit).map(p=>p.name).join(' + ') || '—';
 const KM_LAT = 111.32;
-function nearest(lat, lon, rkm, maxN){
+function nearest(lat, lon, rkm, maxN, grid){
+  grid = grid || curGrid();
   const coslat = Math.cos(lat*Math.PI/180);
   const dLatC = Math.ceil(rkm/KM_LAT/CELL), dLonC = Math.ceil(rkm/(KM_LAT*Math.max(coslat,0.05))/CELL);
   const cy = Math.floor(lat/CELL), cx = Math.floor(lon/CELL);
@@ -974,7 +1012,7 @@ function nearest(lat, lon, rkm, maxN){
   res.sort((p,q)=>p[0]-q[0]);
   return maxN ? res.slice(0,maxN) : res;
 }
-function nearestDist(lat, lon, rkm, coslat){
+function nearestDist(lat, lon, rkm, coslat, grid){
   const dLatC = Math.ceil(rkm/KM_LAT/CELL), dLonC = Math.ceil(rkm/(KM_LAT*Math.max(coslat,0.05))/CELL);
   const cy = Math.floor(lat/CELL), cx = Math.floor(lon/CELL);
   let best = Infinity;
@@ -1104,7 +1142,7 @@ function renderCoverage(){
     const bounds = L.latLngBounds(nw, se);
     const topLeft = map.project(nw, z);
     const lon0 = nw.lng, dLonPx = (se.lng - nw.lng) / size.x;   // longitude is linear in x under Web Mercator
-    const R = settings.range;
+    const R = settings.range, grid = curGrid();
     let y=0;
     const step = () => {
       const t0 = performance.now();
@@ -1113,7 +1151,7 @@ function renderCoverage(){
         const lat = latLng.lat, coslat = Math.cos(lat*Math.PI/180);
         for (let x=0; x<w; x++){
           const lon = lon0 + (x+0.5)*cellPx*dLonPx;
-          const d = nearestDist(lat, lon, R, coslat);
+          const d = nearestDist(lat, lon, R, coslat, grid);
           if (d > R) continue;
           let bi = -1; for (let i=0;i<radii.length;i++){ if (d <= radii[i]) { bi=i; break; } }
           if (bi<0) continue;
@@ -1129,7 +1167,8 @@ function renderCoverage(){
       next.addTo(map);
       if (overlay) map.removeLayer(overlay);
       overlay = next;
-      setStatus(`Coverage at ${settings.f} MHz · ${settings.env} · ${R} km range`);
+      const pv = curProv();
+      setStatus(`${pv ? pv.name : 'All providers'} · ${settings.f} MHz · ${settings.env} · ${R} km range`);
     };
     step();
   });
@@ -1143,10 +1182,14 @@ function renderSites(){
   if (!settings.showSites || map.getZoom() < 10 || !towers.length) return;
   const b = map.getBounds().pad(0.05);
   const z = map.getZoom(), r = z>=13?5: z>=11?3.5:2.5;
+  const pv = curProv(), colors = {}; for (const p of providers) colors[p.key] = css('--p-'+p.key);
+  const colorFor = mask => { if (pv) return colors[pv.key]; const p = providers.find(p=>mask & p.bit); return p ? colors[p.key] : css('--accent'); };
+  const shared = mask => (mask & (mask-1)) !== 0;   // more than one provider bit set
   let n=0;
   for (let i=0;i<towers.length;i++){
     const t=towers[i]; if (!b.contains([t[0],t[1]])) continue;
-    const m = L.circleMarker([t[0],t[1]], {renderer:siteRenderer, pane:'sites', radius:r, color:'#fff', weight:1.2, fillColor:css('--accent'), fillOpacity:0.95});
+    if (pv && !(t[3] & pv.bit)) continue;
+    const m = L.circleMarker([t[0],t[1]], {renderer:siteRenderer, pane:'sites', radius:r, color: shared(t[3]) ? css('--fg') : '#fff', weight: shared(t[3]) ? 1.6 : 1.2, fillColor:colorFor(t[3]), fillOpacity:0.95});
     m.on('click', e => { L.DomEvent.stop(e); selectSite(i); });
     m.addTo(siteGroup);
     if (++n > 4000) break;
@@ -1156,7 +1199,8 @@ function selectSite(i){
   const t = towers[i];
   selectedSite = i;
   const nb = nearest(t[0], t[1], settings.range).filter(p=>p[1]!==i);
-  const html = `<b>Site ${t[2]}</b><br>${t[0].toFixed(5)}, ${t[1].toFixed(5)}<br>${nb.length} other site${nb.length===1?'':'s'} within ${settings.range} km` + (nb.length?`<br>Nearest: site ${towers[nb[0][1]][2]} at ${nb[0][0].toFixed(2)} km`:'');
+  const pv = curProv();
+  const html = `<b>Site ${t[2]}</b><br><span style="color:var(--muted)">${provNames(t[3])}</span><br>${t[0].toFixed(5)}, ${t[1].toFixed(5)}<br>${nb.length} other ${pv ? pv.name+' ' : ''}site${nb.length===1?'':'s'} within ${settings.range} km` + (nb.length?`<br>Nearest: site ${towers[nb[0][1]][2]} at ${nb[0][0].toFixed(2)} km`:'');
   L.popup({offset:[0,-4]}).setLatLng([t[0],t[1]]).setContent(html).openOn(map);
   drawRing();
 }
@@ -1180,6 +1224,24 @@ function inspect(lat, lon, label){
   $('iPlace').textContent = label || (bestPlace ? `${bestPlace.d < 3 ? '' : 'Near '}${bestPlace.p.n}, ${bestPlace.p.a}` : 'Selected location');
   $('iCoords').textContent = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
   $('iFreq').textContent = settings.f;
+  const pv = curProv();
+  $('iProvName').textContent = pv ? pv.name : 'Best of all providers';
+  // provider comparison: best server per provider at this point
+  const cmp = $('iCompare'); cmp.innerHTML = '';
+  for (const p of providers){
+    const nn = nearest(lat, lon, settings.range, 1, grids[p.key]);
+    const tr = document.createElement('tr'); if (pv && pv.key===p.key) tr.className = 'sel';
+    if (!nn.length){
+      tr.innerHTML = `<td><i style="background:${provColor(p.key)}"></i>${p.name}</td><td class="none" colspan="2">no site within ${settings.range} km</td><td class="bar"><div></div></td>`;
+    } else {
+      const t = towers[nn[0][1]]; const d = haversine(lat,lon,t[0],t[1]); const s = rx(d); const b = bandOf(s);
+      const pct = Math.max(0, Math.min(100, (s + 125) / 60 * 100));
+      tr.innerHTML = `<td><i style="background:${provColor(p.key)}"></i>${p.name}</td><td>${s.toFixed(0)} dBm</td><td>${d.toFixed(1)} km</td><td class="bar"><div><i style="width:${pct.toFixed(0)}%;background:${b?`var(${b.var})`:'var(--line)'}"></i></div></td>`;
+    }
+    tr.style.cursor = 'pointer'; tr.title = `Show ${p.name} coverage`;
+    tr.addEventListener('click', ()=>setProvider(p.key));
+    cmp.appendChild(tr);
+  }
   const tb = $('iSites'); tb.innerHTML = '';
   if (!near.length || near[0][0] > settings.range){
     $('iSignal').textContent = '—';
@@ -1194,12 +1256,13 @@ function inspect(lat, lon, label){
       const t = towers[p[1]]; const d = haversine(lat,lon,t[0],t[1]); const L_ = pathLoss(d); const r = settings.eirp - L_; const br = bearing(lat,lon,t[0],t[1]);
       const tr = document.createElement('tr'); if (idx===0) tr.className='best';
       const bb = bandOf(r);
-      tr.innerHTML = `<td><span class="swatch" style="background:${bb?`var(${bb.var})`:'var(--line)'}"></span>${t[2]}</td><td>${d.toFixed(2)}</td><td>${br.toFixed(0)}° ${compass(br)}</td><td>${L_.toFixed(1)}</td><td>${r.toFixed(0)}</td>`;
+      tr.innerHTML = `<td><span class="swatch" style="background:${bb?`var(${bb.var})`:'var(--line)'}"></span>${t[2]}${pv ? '' : ` <span style="color:var(--muted);font-weight:400">${provNames(t[3])}</span>`}</td><td>${d.toFixed(2)}</td><td>${br.toFixed(0)}° ${compass(br)}</td><td>${L_.toFixed(1)}</td><td>${r.toFixed(0)}</td>`;
       tr.style.cursor='pointer'; tr.title='Zoom to this site';
       tr.addEventListener('click', ()=>{ map.flyTo([t[0],t[1]], Math.max(map.getZoom(),12)); selectSite(p[1]); });
       tb.appendChild(tr);
     });
-    $('iNote').textContent = `${near.filter(p=>p[0]<=settings.range).length} site${near.filter(p=>p[0]<=settings.range).length===1?'':'s'} within ${settings.range} km. Best server is the nearest site; rows are the closest ${near.length}.`;
+    const inRange = nearest(lat, lon, settings.range).length;
+    $('iNote').textContent = `${inRange} ${pv ? pv.name+' ' : ''}site${inRange===1?'':'s'} within ${settings.range} km. Best server is the nearest site; rows are the closest ${near.length}.`;
   }
 }
 function nearestPlace(lat, lon){
@@ -1335,6 +1398,30 @@ function afterModelChange(){
   $('kPairsR').textContent = settings.range; schedulePairs();
   if (inspected) inspect(inspected.lat, inspected.lon, inspected.label);
 }
+function renderProviderBar(){
+  const bar = $('providers'); bar.innerHTML = '';
+  const items = providers.map(p=>({key:p.key, name:p.name})).concat([{key:'all', name:'All'}]);
+  for (const it of items){
+    const b = document.createElement('button'); b.type = 'button';
+    b.style.setProperty('--pc', provColor(it.key));
+    b.setAttribute('aria-pressed', settings.provider === it.key);
+    b.innerHTML = `<i></i>${it.name}`;
+    b.addEventListener('click', ()=>setProvider(it.key));
+    bar.appendChild(b);
+  }
+}
+function setProvider(key){
+  if (!grids[key]) key = 'all';
+  settings.provider = key;
+  try { localStorage.setItem('atlas.provider', key); } catch(e){}
+  renderProviderBar();
+  const pv = curProv();
+  $('kProv').textContent = pv ? pv.name : 'All providers';
+  $('kSitesLbl').textContent = pv ? `${pv.name} sites` : 'sites, all providers';
+  map.closePopup();
+  renderSites(); renderCoverage(); schedulePairs();
+  if (inspected) inspect(inspected.lat, inspected.lon, inspected.label);
+}
 function renderLegend(){
   const radii = bandRadii();
   $('legend').innerHTML = BANDS.map((b,i)=>`<div class="row"><i style="background:var(${b.var})"></i><span>${b.name} <span style="color:var(--muted)">${b.desc} dBm</span></span><span>≤ ${radii[i] >= settings.range ? settings.range+'+' : radii[i].toFixed(1)} km</span></div>`).join('') +
@@ -1347,20 +1434,22 @@ let pairsTimer = null;
 function schedulePairs(){ clearTimeout(pairsTimer); pairsTimer = setTimeout(computePairs, 300); }
 function computePairs(){
   if (!towers.length) return;
-  const R = settings.range; let pairs = 0; const nn = new Float32Array(towers.length);
+  const R = settings.range, grid = curGrid(), pv = curProv(); let pairs = 0, count = 0; const nn = [];
   for (let i=0;i<towers.length;i++){
-    const t = towers[i]; const coslat = Math.cos(t[0]*Math.PI/180);
+    const t = towers[i]; if (pv && !(t[3] & pv.bit)) continue;
+    count++;
+    const coslat = Math.cos(t[0]*Math.PI/180);
     const dLatC = Math.ceil(R/KM_LAT/CELL), dLonC = Math.ceil(R/(KM_LAT*Math.max(coslat,0.05))/CELL);
     const cy = Math.floor(t[0]/CELL), cx = Math.floor(t[1]/CELL); let best = Infinity;
     for (let iy=cy-dLatC; iy<=cy+dLatC; iy++) for (let ix=cx-dLonC; ix<=cx+dLonC; ix++){
       const a = grid.get(gkey(iy,ix)); if(!a) continue;
       for (const j of a){ if (j===i) continue; const u=towers[j]; const dy=(u[0]-t[0])*KM_LAT, dx=(u[1]-t[1])*KM_LAT*coslat; const d=Math.sqrt(dx*dx+dy*dy); if (d<=R){ if (j>i) pairs++; if (d<best) best=d; } }
     }
-    nn[i] = best;
+    if (isFinite(best)) nn.push(best);
   }
-  const finite = Array.from(nn).filter(v=>isFinite(v)).sort((a,b)=>a-b);
+  const finite = nn.sort((a,b)=>a-b);
   const compact = n => n >= 1e5 ? new Intl.NumberFormat('en', {notation:'compact', maximumFractionDigits:2}).format(n) : n.toLocaleString();
-  $('kSites').textContent = compact(towers.length);
+  $('kSites').textContent = compact(count);
   $('kPairs').textContent = compact(pairs);
   $('kPairs').title = pairs.toLocaleString() + ' pairs';
   $('kNN').textContent = finite.length ? finite[Math.floor(finite.length/2)].toFixed(1)+' km' : '—';
@@ -1381,10 +1470,12 @@ Promise.all([
   fetch('towers.json').then(r=>r.json()),
 ]).then(([bm, pl, tw])=>{
   basemap = bm; places = pl;
-  towers = tw.towers; towerMeta = {sample: !!tw.sample, source: tw.source||''};
-  if (towerMeta.sample){ $('dataNotice').hidden = false; $('noticeText').textContent = 'These are synthetic site positions generated around populated places so the portal can be exercised. Re-upload the Site_Data_Extract export and the real sites replace them.'; }
-  buildIndex(); buildBasemap(); updateLabels(); renderSites(); renderCoverage(); schedulePairs();
-  $('kSites').textContent = towers.length.toLocaleString();
+  towers = tw.towers.map(t => t.length > 3 ? t : [t[0], t[1], t[2], 1]);
+  providers = tw.providers && tw.providers.length ? tw.providers : [{key:'telus', name:'TELUS', bit:1}];
+  towerMeta = {sample: !!tw.sample, source: tw.source||''};
+  if (towerMeta.sample){ $('dataNotice').hidden = false; $('noticeText').textContent = 'These are synthetic site positions and provider assignments generated around populated places so the portal can be exercised. Re-upload the Site_Data_Extract export (with an operator column) and the real sites replace them.'; }
+  buildIndex(); buildBasemap(); updateLabels();
+  setProvider(settings.provider);
 }).catch(err => { setStatus('Could not load data files: ' + err.message); console.error(err); });
 })();
 </script>
